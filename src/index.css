@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Beanmart Coffee Design System - Warm, inviting, premium coffee aesthetic */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Coffee-inspired color palette */
+    --background: 42 15% 97%;  /* Warm cream */
+    --foreground: 25 20% 15%;  /* Deep coffee brown */
+
+    --card: 40 12% 98%;
+    --card-foreground: 25 20% 15%;
+
+    --popover: 40 12% 98%;
+    --popover-foreground: 25 20% 15%;
+
+    /* Rich coffee brown as primary */
+    --primary: 25 45% 20%;  /* Coffee bean brown */
+    --primary-foreground: 42 20% 95%;
+
+    /* Warm secondary tones */
+    --secondary: 35 25% 88%;  /* Light coffee cream */
+    --secondary-foreground: 25 30% 25%;
+
+    --muted: 38 20% 92%;  /* Soft beige */
+    --muted-foreground: 25 15% 45%;
+
+    /* Warm accent - caramel tones */
+    --accent: 32 35% 75%;  /* Caramel */
+    --accent-foreground: 25 30% 25%;
+
+    /* Coffee cherry red for destructive */
+    --destructive: 8 70% 55%;
+    --destructive-foreground: 42 20% 95%;
+
+    --border: 35 18% 88%;
+    --input: 35 18% 90%;
+    --ring: 25 45% 20%;
+
+    --radius: 0.75rem;
+
+    /* Coffee-specific design tokens */
+    --coffee-dark: 22 50% 12%;      /* Espresso dark */
+    --coffee-medium: 25 45% 20%;    /* Medium roast */
+    --coffee-light: 28 35% 35%;     /* Light roast */
+    --cream: 42 25% 92%;            /* Coffee cream */
+    --milk-foam: 40 15% 96%;        /* Steamed milk */
+    --caramel: 32 45% 65%;          /* Caramel accent */
+    --cinnamon: 25 35% 55%;         /* Cinnamon spice */
+    
+    /* Gradients */
+    --gradient-coffee: linear-gradient(135deg, hsl(var(--coffee-dark)), hsl(var(--coffee-medium)));
+    --gradient-cream: linear-gradient(135deg, hsl(var(--cream)), hsl(var(--milk-foam)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--coffee-dark)) 0%, hsl(var(--coffee-medium)) 50%, hsl(var(--caramel)) 100%);
+    
+    /* Shadows */
+    --shadow-coffee: 0 10px 25px -5px hsl(var(--coffee-dark) / 0.3);
+    --shadow-warm: 0 4px 20px -2px hsl(var(--coffee-medium) / 0.15);
+    --shadow-card: 0 2px 10px -1px hsl(var(--coffee-light) / 0.1);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark mode - cozy coffee shop evening */
+    --background: 22 25% 8%;  /* Dark espresso */
+    --foreground: 42 20% 92%;
+
+    --card: 22 20% 10%;
+    --card-foreground: 42 20% 92%;
+
+    --popover: 22 20% 10%;
+    --popover-foreground: 42 20% 92%;
+
+    --primary: 42 25% 88%;  /* Light cream in dark mode */
+    --primary-foreground: 22 25% 8%;
+
+    --secondary: 25 15% 18%;
+    --secondary-foreground: 42 20% 88%;
+
+    --muted: 25 12% 15%;
+    --muted-foreground: 35 15% 65%;
+
+    --accent: 32 40% 55%;  /* Warmer caramel in dark */
+    --accent-foreground: 22 25% 8%;
+
+    --destructive: 8 65% 50%;
+    --destructive-foreground: 42 20% 92%;
+
+    --border: 25 15% 20%;
+    --input: 25 15% 18%;
+    --ring: 42 25% 88%;
+    
+    /* Update coffee tokens for dark mode */
+    --coffee-dark: 20 30% 5%;
+    --coffee-medium: 22 25% 8%;
+    --coffee-light: 25 20% 25%;
+    --cream: 42 20% 85%;
+    --milk-foam: 40 15% 90%;
+    --caramel: 32 50% 60%;
+    --cinnamon: 25 40% 50%;
+    
+    /* Dark mode gradients */
+    --gradient-coffee: linear-gradient(135deg, hsl(var(--coffee-dark)), hsl(var(--coffee-light)));
+    --gradient-cream: linear-gradient(135deg, hsl(var(--coffee-light)), hsl(var(--coffee-medium)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--coffee-dark)) 0%, hsl(var(--coffee-medium)) 50%, hsl(var(--coffee-light)) 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    @apply font-medium;
+  }
+
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+@layer components {
+  .coffee-gradient {
+    background: var(--gradient-coffee);
+  }
+  
+  .cream-gradient {
+    background: var(--gradient-cream);
+  }
+  
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .coffee-shadow {
+    box-shadow: var(--shadow-coffee);
+  }
+  
+  .warm-shadow {
+    box-shadow: var(--shadow-warm);
+  }
+  
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .smooth-transition {
+    transition: var(--transition-smooth);
+  }
+  
+  .bounce-transition {
+    transition: var(--transition-bounce);
+  }
+}
