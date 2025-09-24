@@ -53,14 +53,16 @@ export default function AdminDashboard() {
     const now = new Date();
     const daysAgo = new Date(now.getTime() - parseInt(dateRange) * 24 * 60 * 60 * 1000);
     
-    const filteredOrders = ordersData.orders.filter((order: any) => 
-      new Date(order.created_at) >= daysAgo
-    );
+    const filteredOrders = ordersData.orders.filter((order: unknown) => {
+      const orderData = order as { created_at: string };
+      return new Date(orderData.created_at) >= daysAgo;
+    });
 
-    const statusCounts = filteredOrders.reduce((acc: any, order: any) => {
-      acc[order.status] = (acc[order.status] || 0) + 1;
+    const statusCounts = filteredOrders.reduce((acc: Record<string, number>, order: unknown) => {
+      const orderData = order as { status: string; total_amount?: string | number };
+      acc[orderData.status] = (acc[orderData.status] || 0) + 1;
       acc.total = (acc.total || 0) + 1;
-      acc.revenue = (acc.revenue || 0) + parseFloat(order.total_amount || 0);
+      acc.revenue = (acc.revenue || 0) + parseFloat(String(orderData.total_amount || 0));
       return acc;
     }, {});
 

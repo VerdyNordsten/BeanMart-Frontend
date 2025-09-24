@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,8 @@ interface Order {
   status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
   total_amount: number;
   currency: string;
-  shipping_address: any;
-  billing_address: any;
+  shipping_address: unknown;
+  billing_address: unknown;
   notes: string;
   created_at: string;
   updated_at: string;
@@ -49,13 +49,7 @@ export default function UserOrders() {
   const { user, token } = useAuthStore();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user && token) {
-      fetchOrders();
-    }
-  }, [user, token]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -68,7 +62,7 @@ export default function UserOrders() {
       } else {
         throw new Error(response.message || "Failed to fetch orders");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch orders:", err);
       setError(err.message || "Failed to load orders. Please try again later.");
       toast({
@@ -79,7 +73,13 @@ export default function UserOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (user && token) {
+      fetchOrders();
+    }
+  }, [user, token, fetchOrders]);
 
   if (loading) {
     return (
@@ -184,9 +184,9 @@ export default function UserOrders() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <p className="font-medium">
-                        {new Intl.NumberFormat("id-ID", {
+                        {new Intl.NumberFormat("en-US", {
                           style: "currency",
-                          currency: order.currency || "IDR",
+                          currency: order.currency || "USD",
                         }).format(order.total_amount)}
                       </p>
                       <p className="text-sm text-muted-foreground">

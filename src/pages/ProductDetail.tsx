@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { additionalProductsApi } from '@/lib/api';
+import { productsApi } from '@/lib/api';
 import { Product } from '@/types/product';
 import { ArrowLeft, ShoppingCart, Star, Package, Weight, Coffee } from 'lucide-react';
 
@@ -14,20 +14,14 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (slug) {
-      loadProduct();
-    }
-  }, [slug]);
-
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     if (!slug) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      const response = await additionalProductsApi.getProductBySlug(slug);
+      const response = await productsApi.getProductBySlug(slug);
       
       if (response.success && response.data) {
         // Transform API data to match frontend Product interface
@@ -53,13 +47,7 @@ export default function ProductDetail() {
           created_at: apiProduct.created_at,
           updated_at: apiProduct.updated_at,
           variants: [],
-          images: [{
-            id: 'default',
-            url: '/api/placeholder/600/600',
-            alt_text: apiProduct.name,
-            is_primary: true,
-            sort_order: 0
-          }]
+          images: []
         };
         
         setProduct(transformedProduct);
@@ -72,7 +60,13 @@ export default function ProductDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    if (slug) {
+      loadProduct();
+    }
+  }, [slug, loadProduct]);
 
   if (loading) {
     return (
@@ -118,9 +112,8 @@ export default function ProductDetail() {
     );
   }
 
-  const priceRange = product.price_min === product.price_max 
-    ? `Rp${product.price_min.toLocaleString()}`
-    : `Rp${product.price_min.toLocaleString()} - Rp${product.price_max.toLocaleString()}`;
+  const basePrice = `$${product.price_min.toLocaleString()}`;
+  const comparePrice = product.price_max > product.price_min ? `$${product.price_max.toLocaleString()}` : null;
 
   const roastLevelColors: Record<string, string> = {
     light: 'bg-caramel/20 text-caramel border-caramel/30',
@@ -144,11 +137,17 @@ export default function ProductDetail() {
           {/* Product Image */}
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden bg-muted rounded-lg">
-              <img
-                src={product.images[0]?.url || '/api/placeholder/600/600'}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
+              {product.images && product.images.length > 0 && product.images[0]?.url ? (
+                <img
+                  src={product.images[0].url}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-muted text-muted-foreground">
+                  <span className="text-lg">No Image Available</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -172,11 +171,11 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="flex items-center space-x-4">
               <span className="font-display text-3xl font-bold text-coffee-dark">
-                {priceRange}
+                {basePrice}
               </span>
-              {product.price_max > product.price_min && (
+              {comparePrice && (
                 <span className="text-lg text-muted-foreground line-through">
-                  Rp{product.price_max.toLocaleString()}
+                  {comparePrice}
                 </span>
               )}
             </div>

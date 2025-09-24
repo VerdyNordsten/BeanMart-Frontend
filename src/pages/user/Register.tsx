@@ -76,7 +76,7 @@ export default function UserRegister() {
         description: "Your account has been created successfully.",
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
       const apiError = formatAPIError(error);
       

@@ -1,466 +1,381 @@
-import { apiClient, apiCall } from './api-client';
-import { User } from './auth';
+import { apiClient } from './api-client';
 
-// Auth API
+// ===== AUTH API =====
 export const authApi = {
-  login: async (email: string, password: string, isAdmin: boolean = false) => {
-    const response = await apiCall(apiClient.post('/auth/login', { email, password, isAdmin }));
-    // Handle different token field names
-    if (response && response.token && !response.accessToken) {
-      return {
-        ...response,
-        accessToken: response.token
-      };
-    }
-    return response;
+  register: async (data: {
+    email: string;
+    password: string;
+    fullName?: string;
+    phone?: string;
+  }) => {
+    const response = await apiClient.post('/auth/register', data);
+    return response.data;
   },
-  
-  getProfile: async (token?: string): Promise<User> => {
-    const config = token ? { 
-      headers: { 
-        'Authorization': `Bearer ${token}` 
-      } 
-    } : {};
-    
-    const response = await apiCall(apiClient.get('/auth/profile', config));
-    // Transform the response to match the User interface
-    const profileData = response.data || response;
-    
-    // Extract role from token if provided
-    let role: 'admin' | 'user' = 'user';
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        role = payload.isAdmin ? 'admin' : 'user';
-      } catch (e) {
-        console.error('Error decoding token:', e);
-      }
-    }
-    
-    return {
-      id: profileData.id,
-      email: profileData.email,
-      full_name: profileData.full_name || profileData.fullName || '',
-      role: role,
-      is_active: profileData.is_active !== undefined ? profileData.is_active : true, // Default to true if not provided
-      phone: profileData.phone,
-      created_at: profileData.created_at
-    };
+
+  login: async (data: {
+    email: string;
+    password: string;
+    isAdmin?: boolean;
+  }) => {
+    const response = await apiClient.post('/auth/login', data);
+    return response.data;
   },
-  
-  register: async (email: string, password: string, fullName: string, phone: string) => {
-    return apiCall(apiClient.post('/auth/register', { email, password, fullName, phone }));
+
+  getProfile: async () => {
+    const response = await apiClient.get('/auth/profile');
+    return response.data;
   },
 };
 
-// User Addresses API
-export const userAddressesApi = {
-  getUserAddresses: async (userId: string) => {
-    return apiCall(apiClient.get(`/users/${userId}/addresses`));
-  },
-  
-  getUserAddress: async (id: string) => {
-    return apiCall(apiClient.get(`/user-addresses/${id}`));
-  },
-  
-  createUserAddress: async (userId: string, data: any) => {
-    return apiCall(apiClient.post(`/users/${userId}/addresses`, data));
-  },
-  
-  updateUserAddress: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/user-addresses/${id}`, data));
-  },
-  
-  deleteUserAddress: async (id: string) => {
-    return apiCall(apiClient.delete(`/user-addresses/${id}`));
-  },
-  
-  setUserAddressAsDefault: async (id: string, userId: string) => {
-    return apiCall(apiClient.post(`/user-addresses/${id}/set-default`, { user_id: userId }));
-  },
-};
-
-// Products API
+// ===== PRODUCTS API =====
 export const productsApi = {
-  getProducts: async (params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    category_id?: string;
-  } = {}) => {
-    try {
-      const response = await apiCall(apiClient.get('/products', { params }));
-      // API returns { success: true, data: [...] }
-      return {
-        success: response.success,
-        data: response.data || [],
-        products: response.data || [], // For backward compatibility
-        pagination: {
-          page: params.page || 1,
-          limit: params.limit || 12,
-          total: response.data?.length || 0,
-          total_pages: Math.ceil((response.data?.length || 0) / (params.limit || 12))
-        }
-      };
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      return {
-        success: false,
-        data: [],
-        products: [],
-        pagination: {
-          page: 1,
-          limit: 12,
-          total: 0,
-          total_pages: 0
-        }
-      };
-    }
+  // Get all products with variants and images
+  getAllProducts: async () => {
+    const response = await apiClient.get('/products');
+    return response.data;
   },
-  
-  getProduct: async (id: string) => {
-    return apiCall(apiClient.get(`/products/${id}`));
-  },
-  
-  createProduct: async (data: any) => {
-    return apiCall(apiClient.post('/products', data));
-  },
-  
-  updateProduct: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/products/${id}`, data));
-  },
-  
-  deleteProduct: async (id: string) => {
-    return apiCall(apiClient.delete(`/products/${id}`));
-  },
-  
-  getProductImages: async (id: string) => {
-    return apiCall(apiClient.get(`/products/${id}/images`));
-  },
-  
-  uploadProductImage: async (productId: string, data: FormData) => {
-    return apiCall(apiClient.post(`/products/${productId}/images`, data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }));
-  },
-  
-  deleteProductImage: async (productId: string, imageId: string) => {
-    return apiCall(apiClient.delete(`/products/${productId}/images/${imageId}`));
-  },
-};
 
-// Orders API
-export const ordersApi = {
-  getOrders: async (params: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    search?: string;
-  } = {}) => {
-    return apiCall(apiClient.get('/orders', { params }));
-  },
-  
-  getUserOrders: async () => {
-    return apiCall(apiClient.get('/orders/my'));
-  },
-  
-  getOrder: async (id: string) => {
-    return apiCall(apiClient.get(`/orders/${id}`));
-  },
-  
-  updateOrderStatus: async (id: string, status: string) => {
-    return apiCall(apiClient.put(`/orders/${id}`, { status }));
-  },
-};
-
-// Users API
-export const usersApi = {
-  getUsers: async (params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-  } = {}) => {
-    return apiCall(apiClient.get('/users', { params }));
-  },
-  
-  updateUser: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/users/${id}`, data));
-  },
-};
-
-// Categories API
-export const categoriesApi = {
-  getCategories: async () => {
-    return apiCall(apiClient.get('/categories'));
-  },
-  
-  createCategory: async (data: any) => {
-    return apiCall(apiClient.post('/categories', data));
-  },
-  
-  updateCategory: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/categories/${id}`, data));
-  },
-  
-  deleteCategory: async (id: string) => {
-    return apiCall(apiClient.delete(`/categories/${id}`));
-  },
-};
-
-// File upload API
-export const filesApi = {
-  uploadFile: async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    return apiCall(apiClient.post('/file-upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }));
-  },
-};
-
-// Product Variants API
-export const productVariantsApi = {
-  getProductVariants: async (productId: string) => {
-    return apiCall(apiClient.get(`/product-variants/product/${productId}`));
-  },
-  
-  getActiveProductVariants: async (productId: string) => {
-    return apiCall(apiClient.get(`/product-variants/product/${productId}/active`));
-  },
-  
-  getProductVariant: async (id: string) => {
-    return apiCall(apiClient.get(`/product-variants/${id}`));
-  },
-  
-  createProductVariant: async (data: any) => {
-    return apiCall(apiClient.post('/product-variants', data));
-  },
-  
-  updateProductVariant: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/product-variants/${id}`, data));
-  },
-  
-  deleteProductVariant: async (id: string) => {
-    return apiCall(apiClient.delete(`/product-variants/${id}`));
-  },
-  
-  getProductVariantBySku: async (sku: string) => {
-    return apiCall(apiClient.get(`/product-variants/sku/${sku}`));
-  },
-};
-
-// Product Categories API
-export const productCategoriesApi = {
-  addProductCategory: async (data: { product_id: string; category_id: string }) => {
-    return apiCall(apiClient.post('/product-categories', data));
-  },
-  
-  removeProductCategory: async (data: { product_id: string; category_id: string }) => {
-    return apiCall(apiClient.post('/product-categories/remove', data));
-  },
-  
-  getProductCategories: async (productId: string) => {
-    return apiCall(apiClient.get(`/product-categories/product/${productId}`));
-  },
-  
-  getCategoryProducts: async (categoryId: string) => {
-    return apiCall(apiClient.get(`/product-categories/category/${categoryId}`));
-  },
-};
-
-// Product Options API
-export const productOptionsApi = {
-  getProductOptions: async (optionTypeId: string) => {
-    return apiCall(apiClient.get(`/product-options/option-type/${optionTypeId}`));
-  },
-  
-  getProductOption: async (id: string) => {
-    return apiCall(apiClient.get(`/product-options/${id}`));
-  },
-  
-  createProductOption: async (data: any) => {
-    return apiCall(apiClient.post('/product-options', data));
-  },
-  
-  updateProductOption: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/product-options/${id}`, data));
-  },
-  
-  deleteProductOption: async (id: string) => {
-    return apiCall(apiClient.delete(`/product-options/${id}`));
-  },
-};
-
-// Product Option Types API
-export const productOptionTypesApi = {
-  getProductOptionTypes: async (productId: string) => {
-    return apiCall(apiClient.get(`/product-option-types/product/${productId}`));
-  },
-  
-  getProductOptionType: async (id: string) => {
-    return apiCall(apiClient.get(`/product-option-types/${id}`));
-  },
-  
-  createProductOptionType: async (data: any) => {
-    return apiCall(apiClient.post('/product-option-types', data));
-  },
-  
-  updateProductOptionType: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/product-option-types/${id}`, data));
-  },
-  
-  deleteProductOptionType: async (id: string) => {
-    return apiCall(apiClient.delete(`/product-option-types/${id}`));
-  },
-};
-
-// Product Images API
-export const productImagesApi = {
-  getProductImages: async (productId: string) => {
-    return apiCall(apiClient.get(`/product-images/product/${productId}`));
-  },
-  
-  getProductImage: async (id: string) => {
-    return apiCall(apiClient.get(`/product-images/${id}`));
-  },
-  
-  createProductImage: async (data: any) => {
-    return apiCall(apiClient.post('/product-images', data));
-  },
-  
-  updateProductImage: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/product-images/${id}`, data));
-  },
-  
-  deleteProductImage: async (id: string) => {
-    return apiCall(apiClient.delete(`/product-images/${id}`));
-  },
-  
-  updateProductImagePosition: async (id: string, position: number) => {
-    return apiCall(apiClient.put(`/product-images/${id}/position`, { position }));
-  },
-};
-
-// File Upload API (Product Images)
-export const fileUploadApi = {
-  uploadProductImage: async (data: FormData) => {
-    return apiCall(apiClient.post('/file-upload/product-image', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }));
-  },
-  
-  uploadProductImages: async (data: FormData) => {
-    return apiCall(apiClient.post('/file-upload/product-images', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }));
-  },
-};
-
-// Variant Images API
-export const variantImagesApi = {
-  getVariantImages: async (variantId: string) => {
-    return apiCall(apiClient.get(`/variant-images/variant/${variantId}`));
-  },
-  
-  getVariantImage: async (id: string) => {
-    return apiCall(apiClient.get(`/variant-images/${id}`));
-  },
-  
-  createVariantImage: async (data: any) => {
-    return apiCall(apiClient.post('/variant-images', data));
-  },
-  
-  updateVariantImage: async (id: string, data: any) => {
-    return apiCall(apiClient.put(`/variant-images/${id}`, data));
-  },
-  
-  deleteVariantImage: async (id: string) => {
-    return apiCall(apiClient.delete(`/variant-images/${id}`));
-  },
-};
-
-// Additional Products API
-export const additionalProductsApi = {
+  // Get active products with variants and images
   getActiveProducts: async () => {
-    try {
-      return await apiCall(apiClient.get('/products/active'));
-    } catch (error) {
-      console.error('Error fetching active products:', error);
-      return { success: false, data: [] };
-    }
+    const response = await apiClient.get('/products/active');
+    return response.data;
   },
 
+  // Get product by ID with variants and images
+  getProduct: async (id: string) => {
+    const response = await apiClient.get(`/products/${id}`);
+    return response.data;
+  },
+
+  // Get product by slug with variants and images
   getProductBySlug: async (slug: string) => {
-    try {
-      return await apiCall(apiClient.get(`/products/slug/${slug}`));
-    } catch (error) {
-      console.error('Error fetching product by slug:', error);
-      return { success: false, data: null };
-    }
+    const response = await apiClient.get(`/products/slug/${slug}`);
+    return response.data;
   },
 
-  getProductVariants: async (id: string) => {
-    try {
-      return await apiCall(apiClient.get(`/products/${id}/variants`));
-    } catch (error) {
-      console.error('Error fetching product variants:', error);
-      return { success: false, data: [] };
-    }
+  // Create product (admin only)
+  createProduct: async (data: {
+    slug: string;
+    name: string;
+    short_description?: string;
+    long_description?: string;
+    currency: string;
+    is_active: boolean;
+  }) => {
+    const response = await apiClient.post('/products', data);
+    return response.data;
   },
 
-  getActiveProductVariants: async (id: string) => {
-    try {
-      return await apiCall(apiClient.get(`/products/${id}/variants/active`));
-    } catch (error) {
-      console.error('Error fetching active product variants:', error);
-      return { success: false, data: [] };
-    }
+  // Update product (admin only)
+  updateProduct: async (id: string, data: {
+    slug?: string;
+    name?: string;
+    short_description?: string;
+    long_description?: string;
+    currency?: string;
+    is_active?: boolean;
+  }) => {
+    const response = await apiClient.put(`/products/${id}`, data);
+    return response.data;
   },
 
-  getProductImages: async (id: string) => {
-    try {
-      return await apiCall(apiClient.get(`/products/${id}/images`));
-    } catch (error) {
-      console.error('Error fetching product images:', error);
-      return { success: false, data: [] };
-    }
+  // Delete product (admin only)
+  deleteProduct: async (id: string) => {
+    const response = await apiClient.delete(`/products/${id}`);
+    return response.data;
   },
 };
 
-// Additional Categories API
-export const additionalCategoriesApi = {
+// ===== PRODUCT VARIANTS API =====
+export const productVariantsApi = {
+  // Get all variants for a product
+  getProductVariants: async (productId: string) => {
+    const response = await apiClient.get(`/product-variants/product/${productId}`);
+    return response.data;
+  },
+  
+  // Get active variants for a product
+  getActiveProductVariants: async (productId: string) => {
+    const response = await apiClient.get(`/product-variants/product/${productId}/active`);
+    return response.data;
+  },
+  
+  // Get variant by ID
+  getProductVariant: async (id: string) => {
+    const response = await apiClient.get(`/product-variants/${id}`);
+    return response.data;
+  },
+
+  // Create variant (admin only)
+  createVariant: async (data: {
+    product_id: string;
+    price: number;
+    compare_at_price?: number;
+    stock: number;
+    weight_gram?: number;
+    is_active: boolean;
+  }) => {
+    const response = await apiClient.post('/product-variants', data);
+    return response.data;
+  },
+
+  // Update variant (admin only)
+  updateVariant: async (id: string, data: {
+    price?: number;
+    compare_at_price?: number;
+    stock?: number;
+    weight_gram?: number;
+    is_active?: boolean;
+  }) => {
+    const response = await apiClient.put(`/product-variants/${id}`, data);
+    return response.data;
+  },
+
+  // Delete variant (admin only)
+  deleteVariant: async (id: string) => {
+    const response = await apiClient.delete(`/product-variants/${id}`);
+    return response.data;
+  },
+};
+
+// ===== VARIANT IMAGES API =====
+export const variantImagesApi = {
+  // Upload single image (admin only)
+  uploadImage: async (formData: FormData) => {
+    const response = await apiClient.post('/variant-images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Upload multiple images (admin only)
+  uploadMultipleImages: async (formData: FormData) => {
+    const response = await apiClient.post('/variant-images/multiple', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Advanced upload (file, URL, or base64) (admin only)
+  uploadAdvanced: async (formData: FormData) => {
+    const response = await apiClient.post('/variant-images/upload-advanced', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Advanced upload multiple (admin only)
+  uploadAdvancedMultiple: async (formData: FormData) => {
+    const response = await apiClient.post('/variant-images/upload-advanced-multiple', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Delete image (admin only)
+  deleteImage: async (id: string) => {
+    const response = await apiClient.delete(`/variant-images/${id}`);
+    return response.data;
+  },
+
+  // Smart delete image (admin only)
+  smartDeleteImage: async (id: string) => {
+    const response = await apiClient.delete(`/variant-images/${id}/smart-delete`);
+    return response.data;
+  },
+};
+
+// ===== CATEGORIES API =====
+export const categoriesApi = {
+  // Get all categories
+  getAllCategories: async () => {
+    const response = await apiClient.get('/categories');
+    return response.data;
+  },
+
+  // Get category by ID
+  getCategory: async (id: string) => {
+    const response = await apiClient.get(`/categories/${id}`);
+    return response.data;
+  },
+
+  // Get category by slug
   getCategoryBySlug: async (slug: string) => {
-    return apiCall(apiClient.get(`/categories/slug/${slug}`));
+    const response = await apiClient.get(`/categories/slug/${slug}`);
+    return response.data;
   },
-  
-  getCategoryProducts: async (id: string) => {
-    return apiCall(apiClient.get(`/categories/${id}/products`));
+
+  // Get products for category
+  getProductsForCategory: async (id: string) => {
+    const response = await apiClient.get(`/categories/${id}/products`);
+    return response.data;
+  },
+
+  // Create category (admin only)
+  createCategory: async (data: {
+    slug: string;
+    name: string;
+  }) => {
+    const response = await apiClient.post('/categories', data);
+    return response.data;
+  },
+
+  // Update category (admin only)
+  updateCategory: async (id: string, data: {
+    slug?: string;
+    name?: string;
+  }) => {
+    const response = await apiClient.put(`/categories/${id}`, data);
+    return response.data;
+  },
+
+  // Delete category (admin only)
+  deleteCategory: async (id: string) => {
+    const response = await apiClient.delete(`/categories/${id}`);
+    return response.data;
   },
 };
 
-// Additional Users API
-export const additionalUsersApi = {
+// ===== USERS API =====
+export const usersApi = {
+  // Get all users (admin only)
+  getAllUsers: async () => {
+    const response = await apiClient.get('/users');
+    return response.data;
+  },
+
+  // Get user by ID (admin only)
   getUser: async (id: string) => {
-    return apiCall(apiClient.get(`/users/${id}`));
+    const response = await apiClient.get(`/users/${id}`);
+    return response.data;
   },
-  
-  createUser: async (data: any) => {
-    return apiCall(apiClient.post('/users', data));
+
+  // Update user (admin only)
+  updateUser: async (id: string, data: {
+    email?: string;
+    full_name?: string;
+    phone?: string;
+  }) => {
+    const response = await apiClient.put(`/users/${id}`, data);
+    return response.data;
   },
-  
+
+  // Delete user (admin only)
   deleteUser: async (id: string) => {
-    return apiCall(apiClient.delete(`/users/${id}`));
+    const response = await apiClient.delete(`/users/${id}`);
+    return response.data;
   },
 };
 
-// Additional Orders API
-export const additionalOrdersApi = {
-  createOrder: async (data: any) => {
-    return apiCall(apiClient.post('/orders', data));
+// ===== USER ADDRESSES API =====
+export const userAddressesApi = {
+  // Get user addresses
+  getUserAddresses: async (userId: string) => {
+    const response = await apiClient.get(`/user-addresses/user/${userId}`);
+    return response.data;
   },
-  
-  deleteOrder: async (id: string) => {
-    return apiCall(apiClient.delete(`/orders/${id}`));
+
+  // Get address by ID
+  getAddress: async (id: string) => {
+    const response = await apiClient.get(`/user-addresses/${id}`);
+    return response.data;
+  },
+
+  // Create address
+  createAddress: async (data: {
+    user_id: string;
+    label: string;
+    recipient_name: string;
+    recipient_phone: string;
+    address: string;
+    city: string;
+    province: string;
+    postal_code: string;
+    is_primary: boolean;
+  }) => {
+    const response = await apiClient.post('/user-addresses', data);
+    return response.data;
+  },
+
+  // Update address
+  updateAddress: async (id: string, data: {
+    label?: string;
+    recipient_name?: string;
+    recipient_phone?: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postal_code?: string;
+    is_primary?: boolean;
+  }) => {
+    const response = await apiClient.put(`/user-addresses/${id}`, data);
+    return response.data;
+  },
+
+  // Delete address
+  deleteAddress: async (id: string) => {
+    const response = await apiClient.delete(`/user-addresses/${id}`);
+    return response.data;
+  },
+};
+
+// ===== ORDERS API =====
+export const ordersApi = {
+  // Get all orders (admin only)
+  getAllOrders: async () => {
+    const response = await apiClient.get('/orders');
+    return response.data;
+  },
+
+  // Get user orders
+  getUserOrders: async (userId: string) => {
+    const response = await apiClient.get(`/orders/user/${userId}`);
+    return response.data;
+  },
+
+  // Get order by ID
+  getOrder: async (id: string) => {
+    const response = await apiClient.get(`/orders/${id}`);
+    return response.data;
+  },
+
+  // Create order
+  createOrder: async (data: {
+    user_id: string;
+    address_id: string;
+    items: Array<{
+      variant_id: string;
+      quantity: number;
+      price: number;
+    }>;
+    total_amount: number;
+    shipping_cost: number;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/orders', data);
+    return response.data;
+  },
+
+  // Update order status (admin only)
+  updateOrderStatus: async (id: string, data: {
+    status: string;
+    tracking_number?: string;
+  }) => {
+    const response = await apiClient.put(`/orders/${id}/status`, data);
+    return response.data;
+  },
+
+  // Cancel order
+  cancelOrder: async (id: string) => {
+    const response = await apiClient.put(`/orders/${id}/cancel`);
+    return response.data;
   },
 };

@@ -1,5 +1,6 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { useAuthStore } from './auth';
+import { debug, logApi, logResponse, logError } from '@/utils/debug';
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -54,16 +55,28 @@ export interface APIError {
 }
 
 // Helper to format API errors
-export const formatAPIError = (error: any): APIError => {
-  if (error.response?.data) {
+export const formatAPIError = (error: unknown): APIError => {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.data && typeof axiosError.response.data === 'object') {
+      const data = axiosError.response.data as { message?: string; details?: Record<string, string[]> };
+      return {
+        message: data.message || 'An error occurred',
+        details: data.details || {},
+        status: axiosError.response.status,
+      };
+    }
+  }
+  
+  if (error && typeof error === 'object' && 'message' in error) {
     return {
-      message: error.response.data.message || 'An error occurred',
-      details: error.response.data.details || {},
-      status: error.response.status,
+      message: (error as Error).message || 'Network error',
+      status: 0,
     };
   }
+  
   return {
-    message: error.message || 'Network error',
+    message: 'Unknown error',
     status: 0,
   };
 };

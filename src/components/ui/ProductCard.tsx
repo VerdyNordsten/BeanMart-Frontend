@@ -14,12 +14,10 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
   // Use the first image or a placeholder
   const primaryImage = product.images && product.images.length > 0 
     ? product.images[0].url 
-    : '/api/placeholder/300/300';
+    : '';
   
-  // Format price - handle both price_min/price_max and base_price
-  const priceRange = product.price_min === product.price_max 
-    ? `Rp${product.price_min.toLocaleString()}`
-    : `Rp${product.price_min.toLocaleString()} - Rp${product.price_max.toLocaleString()}`;
+  // Format price - show only base price
+  const basePrice = `$${product.price_min.toLocaleString()}`;
 
   // Default roast level if not provided
   const roastLevel = product.roast_level || 'medium';
@@ -34,11 +32,17 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
     <Card className="group overflow-hidden card-shadow hover:warm-shadow smooth-transition hover:-translate-y-1">
       <Link to={`/product/${product.slug}`}>
         <div className="aspect-square overflow-hidden bg-muted">
-          <img
-            src={primaryImage}
-            alt={product.name}
-            className="h-full w-full object-cover smooth-transition group-hover:scale-105"
-          />
+          {primaryImage ? (
+            <img
+              src={primaryImage}
+              alt={product.name}
+              className="h-full w-full object-cover smooth-transition group-hover:scale-105"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center bg-muted text-muted-foreground">
+              <span className="text-sm">No Image</span>
+            </div>
+          )}
         </div>
       </Link>
       
@@ -75,7 +79,7 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
         <div className="flex items-center justify-between">
           <div>
             <span className="font-semibold text-coffee-dark text-lg">
-              {priceRange}
+              {basePrice}
             </span>
             {product.variants && product.variants.length > 1 && (
               <span className="text-xs text-muted-foreground ml-1">

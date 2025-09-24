@@ -1,10 +1,10 @@
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { ShoppingBag, MapPin, CreditCard, User } from "lucide-react";
-import { useEffect, useState } from "react";
 import { ordersApi } from "@/lib/api";
 import { userAddressesApi } from "@/lib/api";
 
@@ -35,9 +35,9 @@ export default function UserDashboard() {
       fetchUserOrders();
       fetchUserAddresses();
     }
-  }, [user, token]);
+  }, [user, token, fetchUserOrders, fetchUserAddresses]);
 
-  const fetchUserOrders = async () => {
+  const fetchUserOrders = useCallback(async () => {
     try {
       setOrdersLoading(true);
       const response = await ordersApi.getUserOrders();
@@ -49,9 +49,9 @@ export default function UserDashboard() {
     } finally {
       setOrdersLoading(false);
     }
-  };
+  }, []);
 
-  const fetchUserAddresses = async () => {
+  const fetchUserAddresses = useCallback(async () => {
     try {
       setAddressesLoading(true);
       const response = await userAddressesApi.getUserAddresses(user!.id);
@@ -63,7 +63,7 @@ export default function UserDashboard() {
     } finally {
       setAddressesLoading(false);
     }
-  };
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -185,9 +185,9 @@ export default function UserDashboard() {
                       </p>
                     </div>
                     <div className="ml-auto font-medium">
-                      {new Intl.NumberFormat("id-ID", {
+                      {new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: order.currency || "IDR",
+                        currency: order.currency || "USD",
                       }).format(order.total_amount)}
                     </div>
                   </div>

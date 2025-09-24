@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { productsApi as api } from '@/lib/api';
 import { Product, ProductsResponse } from '@/types/product';
 import { Search, Filter, X } from 'lucide-react';
 
-export default function Catalog() {
+export default function ProductPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [productsData, setProductsData] = useState<ProductsResponse>({
     products: [],
@@ -21,11 +21,7 @@ export default function Catalog() {
   const [priceFilter, setPriceFilter] = useState(searchParams.get('price') || '');
   const [inStockOnly, setInStockOnly] = useState(searchParams.get('in_stock') === 'true');
 
-  useEffect(() => {
-    loadProducts();
-  }, [searchParams]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -42,15 +38,33 @@ export default function Catalog() {
       if (response.success && response.data && Array.isArray(response.data)) {
         products = response.data
           // Filter out inactive products
-          .filter((apiProduct: any) => apiProduct.is_active !== false)
-          .map((apiProduct: any) => ({
-            id: apiProduct.id,
-            slug: apiProduct.slug,
-            name: apiProduct.name,
-            short_description: apiProduct.short_description || '',
-            long_description: apiProduct.long_description || '',
-            price_min: parseFloat(apiProduct.base_price) || 0,
-            price_max: parseFloat(apiProduct.base_compare_at_price) || parseFloat(apiProduct.base_price) || 0,
+          .filter((apiProduct: unknown) => (apiProduct as { is_active?: boolean }).is_active !== false)
+          .map((apiProduct: unknown) => {
+            const product = apiProduct as {
+              id: string;
+              slug: string;
+              name: string;
+              short_description?: string;
+              long_description?: string;
+              base_price?: number;
+              base_compare_at_price?: number;
+              currency: string;
+              is_active: boolean;
+              sku?: string;
+              weight_gram?: number;
+              created_at: string;
+              updated_at: string;
+              variants?: unknown[];
+              images?: unknown[];
+            };
+            return {
+            id: product.id,
+            slug: product.slug,
+            name: product.name,
+            short_description: product.short_description || '',
+            long_description: product.long_description || '',
+            price_min: product.base_price || 0,
+            price_max: product.base_compare_at_price || product.base_price || 0,
             origin: '', // Not available in current API
             roast_level: 'medium' as const, // Default value, would need to be extracted from product data
             tasting_notes: [], // Not available in current API
@@ -59,19 +73,14 @@ export default function Catalog() {
             producer: '', // Not available in current API
             harvest_date: '', // Not available in current API
             is_featured: false, // Not available in current API
-            is_active: apiProduct.is_active !== false,
+            is_active: product.is_active !== false,
             category_id: '', // Not available in current API
-            created_at: apiProduct.created_at,
-            updated_at: apiProduct.updated_at,
-            variants: [], // Not available in current API, would need separate API call
-            images: [{
-              id: 'default',
-              url: '/api/placeholder/300/300',
-              alt_text: apiProduct.name,
-              is_primary: true,
-              sort_order: 0
-            }] // Default image
-          }));
+            created_at: product.created_at,
+            updated_at: product.updated_at,
+            variants: product.variants || [],
+            images: product.images || []
+          };
+        });
       }
       
       // Apply client-side filters
@@ -111,7 +120,11 @@ export default function Catalog() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams, searchQuery, priceFilter]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const updateFilters = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);

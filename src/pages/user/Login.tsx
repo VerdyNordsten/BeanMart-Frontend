@@ -80,7 +80,7 @@ export default function UserLogin() {
         description: "Successfully logged in to your account.",
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
       const apiError = formatAPIError(error);
       

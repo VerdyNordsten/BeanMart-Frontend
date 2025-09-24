@@ -108,7 +108,7 @@ export default function UserProfile() {
       } else {
         throw new Error(response.message || "Failed to update profile");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Profile update error:", error);
       toast({
         title: "Error",

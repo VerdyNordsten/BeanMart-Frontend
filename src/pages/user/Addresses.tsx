@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -55,13 +55,7 @@ export default function UserAddresses() {
     is_default: false,
   });
 
-  useEffect(() => {
-    if (user && token) {
-      fetchAddresses();
-    }
-  }, [user, token]);
-
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,7 +66,7 @@ export default function UserAddresses() {
       } else {
         throw new Error(response.message || "Failed to fetch addresses");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch addresses:", err);
       setError(err.message || "Failed to load addresses. Please try again later.");
       toast({
@@ -83,7 +77,13 @@ export default function UserAddresses() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user && token) {
+      fetchAddresses();
+    }
+  }, [user, token, fetchAddresses]);
 
   const handleSetDefault = async (id: string) => {
     try {
@@ -108,7 +108,7 @@ export default function UserAddresses() {
       } else {
         throw new Error(response.message || "Failed to set default address");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to set default address:", err);
       toast({
         title: "Error",
@@ -137,7 +137,7 @@ export default function UserAddresses() {
       } else {
         throw new Error(response.message || "Failed to delete address");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to delete address:", err);
       toast({
         title: "Error",
@@ -284,7 +284,7 @@ export default function UserAddresses() {
       } else {
         throw new Error(response.message || "Failed to add address");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to add address:", err);
       
       // Try to get more detailed error information

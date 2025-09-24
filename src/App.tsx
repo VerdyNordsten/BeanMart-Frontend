@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import Home from "./pages/Home";
-import Catalog from "./pages/Catalog";
+import ProductPage from "./pages/Product";
 import ProductDetail from "./pages/ProductDetail";
 import Story from "./pages/Story";
 import Contact from "./pages/Contact";
@@ -18,6 +18,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { UserLayout } from "@/components/user/UserLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
+import AdminCategories from "./pages/admin/Categories";
 import AdminOrders from "./pages/admin/Orders";
 import UserDashboard from "./pages/user/Dashboard";
 import UserOrders from "./pages/user/Orders";
@@ -38,7 +39,7 @@ const App = () => (
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Catalog />} />
+              <Route path="/products" element={<ProductPage />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/story" element={<Story />} />
               <Route path="/contact" element={<Contact />} />
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
+                <Route path="categories" element={<AdminCategories />} />
                 <Route path="orders" element={<AdminOrders />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

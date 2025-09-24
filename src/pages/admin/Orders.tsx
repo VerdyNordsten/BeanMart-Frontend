@@ -47,7 +47,7 @@ export default function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<unknown>(null);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   
   const { toast } = useToast();
@@ -234,43 +234,51 @@ export default function AdminOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order: any) => {
-                    const statusInfo = statusConfig[order.status as keyof typeof statusConfig];
+                  {orders.map((order: unknown) => {
+                    const orderData = order as {
+                      id: string;
+                      status: string;
+                      total_amount: string | number;
+                      created_at: string;
+                      user: { full_name: string; email: string };
+                      shipping_address: { street_address: string; city: string; state: string; postal_code: string };
+                    };
+                    const statusInfo = statusConfig[orderData.status as keyof typeof statusConfig];
                     const StatusIcon = statusInfo?.icon || Clock;
                     
                     return (
-                      <TableRow key={order.id}>
+                      <TableRow key={orderData.id}>
                         <TableCell>
                           <div className="font-mono text-sm">
-                            #{order.id.slice(-8).toUpperCase()}
+                            #{orderData.id.slice(-8).toUpperCase()}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {order.customer_name || 'Unknown Customer'}
+                              {orderData.user.full_name || 'Unknown Customer'}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {order.customer_email}
+                              {orderData.user.email}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            ${parseFloat(order.total_amount || 0).toFixed(2)}
+                            ${parseFloat(String(orderData.total_amount || 0)).toFixed(2)}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Badge className={statusInfo?.color || 'bg-gray-500 text-white'}>
                               <StatusIcon className="h-3 w-3 mr-1" />
-                              {statusInfo?.label || order.status}
+                              {statusInfo?.label || orderData.status}
                             </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            {new Date(order.created_at).toLocaleDateString()}
+                            {new Date(orderData.created_at).toLocaleDateString()}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -282,7 +290,7 @@ export default function AdminOrders() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => handleViewOrder(order.id)}
+                                onClick={() => handleViewOrder(orderData.id)}
                                 className="gap-2"
                               >
                                 <Eye className="h-4 w-4" />
@@ -293,11 +301,11 @@ export default function AdminOrders() {
                                 <DropdownMenuItem
                                   key={status}
                                   onClick={() => updateStatusMutation.mutate({ 
-                                    id: order.id, 
+                                    id: orderData.id, 
                                     status 
                                   })}
                                   className="gap-2"
-                                  disabled={order.status === status}
+                                  disabled={orderData.status === status}
                                 >
                                   <config.icon className="h-4 w-4" />
                                   Mark as {config.label}
@@ -459,19 +467,27 @@ export default function AdminOrders() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {selectedOrder.items.map((item: any, index: number) => (
+                      {selectedOrder.items.map((item: unknown, index: number) => {
+                        const itemData = item as {
+                          product_name?: string;
+                          name?: string;
+                          quantity: number;
+                          price: number;
+                        };
+                        return (
                         <div key={index} className="flex justify-between items-center border-b pb-2 last:border-b-0">
                           <div>
-                            <div className="font-medium">{item.product_name || item.name}</div>
+                            <div className="font-medium">{itemData.product_name || itemData.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              Qty: {item.quantity} × ${item.price}
+                              Qty: {itemData.quantity} × ${itemData.price}
                             </div>
                           </div>
                           <div className="font-medium">
-                            ${(item.quantity * item.price).toFixed(2)}
+                            ${(itemData.quantity * itemData.price).toFixed(2)}
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>

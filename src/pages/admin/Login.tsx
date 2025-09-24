@@ -92,7 +92,7 @@ export default function AdminLogin() {
         description: "Successfully logged in to admin panel.",
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       const apiError = formatAPIError(error);
       
