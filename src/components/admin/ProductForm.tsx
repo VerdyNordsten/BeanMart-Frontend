@@ -167,7 +167,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             } else if (imageData.imageData) {
               formData.append('imageData', imageData.imageData);
             }
-            formData.append('variantId', variantId);
+            formData.append('variant_id', variantId);
             formData.append('position', imageData.position.toString());
 
             await variantImagesApi.uploadAdvanced(formData);
@@ -203,7 +203,28 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       // Update product
       await productsApi.updateProduct(product.id, data.product);
 
-      // Update variants
+      // Get current variants to compare with updated ones
+      const currentProductResponse = await productsApi.getProduct(product.id);
+      if (!currentProductResponse.success || !currentProductResponse.data) {
+        throw new Error('Failed to fetch current product data');
+      }
+      const currentVariants = currentProductResponse.data.variants || [];
+
+      // Identify variants to delete (those that exist in current but not in updated data)
+      const updatedVariantIds = data.variants
+        .filter(variant => variant.id)  // Only existing variants have IDs
+        .map(variant => variant.id);
+        
+      const variantsToDelete = currentVariants.filter(
+        (currentVariant: any) => !updatedVariantIds.includes(currentVariant.id)
+      );
+
+      // Delete removed variants
+      for (const variantToDelete of variantsToDelete) {
+        await productVariantsApi.deleteVariant(variantToDelete.id);
+      }
+
+      // Process each variant in the updated data
       for (const variantData of data.variants) {
         if (variantData.id) {
           // Update existing variant
@@ -215,9 +236,30 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             is_active: variantData.is_active,
           });
 
-          // Handle images for existing variant
+          // Get current images for this variant to compare with new ones
+          const currentVariant = currentVariants.find(
+            (v: any) => v.id === variantData.id
+          );
+          const currentImages = currentVariant?.images || [];
+
+          // Identify images to delete (those that exist in current but not in updated data)
+          const updatedImageIds = variantData.images
+            .filter(img => img.id) // Only existing images have IDs
+            .map(img => img.id);
+            
+          const imagesToDelete = currentImages.filter(
+            (img: any) => !updatedImageIds.includes(img.id)
+          );
+
+          // Delete images that are no longer needed
+          for (const imgToDelete of imagesToDelete) {
+            await variantImagesApi.deleteImage(imgToDelete.id);
+          }
+
+          // Upload new images (those without an ID)
           for (const imageData of variantData.images) {
-            if (imageData.url || imageData.imageData) {
+            if (!imageData.id && (imageData.url || imageData.imageData)) {
+              // Upload new image
               const formData = new FormData();
               if (imageData.url) {
                 formData.append('url', imageData.url);
@@ -255,7 +297,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
               } else if (imageData.imageData) {
                 formData.append('imageData', imageData.imageData);
               }
-              formData.append('variantId', variantId);
+              formData.append('variant_id', variantId);
               formData.append('position', imageData.position.toString());
 
               await variantImagesApi.uploadAdvanced(formData);

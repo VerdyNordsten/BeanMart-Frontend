@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/lib/auth';
 import { productsApi, productVariantsApi } from '@/lib/api';
 import { SimpleProductEditModal } from '@/components/admin/SimpleProductEditModal';
 import { SimpleProductAddModal } from '@/components/admin/SimpleProductAddModal';
@@ -50,19 +50,12 @@ export default function AdminProducts() {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
-      // First get product variants
-      const variantsResponse = await productVariantsApi.getProductVariants(productId);
-      if (variantsResponse.success && variantsResponse.data) {
-        // Delete all variants (this will cascade delete images)
-        for (const variant of variantsResponse.data) {
-          await productVariantsApi.deleteVariant(variant.id);
-        }
-      }
-      // Then delete the product
+      // Delete the product - the backend has CASCADE DELETE relationships
+      // that will automatically remove associated variants and images
       await productsApi.deleteProduct(productId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products-complete'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-products-complete', currentPage, itemsPerPage, searchQuery] });
       toast({
         title: 'Success',
         description: 'Product deleted successfully',

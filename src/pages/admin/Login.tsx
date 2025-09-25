@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore, isAdmin } from '@/lib/auth';
+import { useAuthStore } from '@/lib/auth';
 import { authApi } from '@/lib/api';
 import { formatAPIError } from '@/lib/api-client';
 import { Coffee, Loader2 } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function AdminLogin() {
   });
 
   // Redirect if already authenticated as admin
-  if (user && isAdmin(user)) {
+  if (user && user.role === 'admin' && user.is_active) {
     return <Navigate to="/admin" replace />;
   }
 
@@ -43,7 +43,7 @@ export default function AdminLogin() {
     
     try {
       console.log('Attempting login with:', data);
-      const response = await authApi.login(data.email, data.password, true); // isAdmin = true for admin panel
+      const response = await authApi.login({ email: data.email, password: data.password, isAdmin: true }); // isAdmin = true for admin panel
       console.log('Login response:', response);
       
       // Handle the token field name difference
@@ -66,16 +66,7 @@ export default function AdminLogin() {
         console.error('Error decoding token:', e);
       }
       
-      // Verify user profile and admin role using the token directly
-      const profile = await authApi.getProfile(token);
-      console.log('Profile response:', profile);
-      
-      // Update profile with role from token
-      const profileWithRole = {
-        ...profile,
-        role: userType as 'admin' | 'user'
-      };
-      
+      // Check if user is admin from the token type
       if (userType !== 'admin') {
         toast({
           title: "Access Denied",
@@ -85,7 +76,29 @@ export default function AdminLogin() {
         return;
       }
       
-      setAuth(profileWithRole, token);
+      // Use the user data from the login response (it should contain the user object)
+      const userData = response.data;
+      if (!userData) {
+        toast({
+          title: "Login Error",
+          description: "User data not found in response.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create user object compatible with authStore
+      const userForStore = {
+        id: userData.id,
+        email: userData.email,
+        full_name: userData.full_name || userData.fullName,
+        phone: userData.phone,
+        role: userType as 'admin' | 'user',
+        is_active: userData.is_active !== undefined ? userData.is_active : true
+      };
+      
+      // Set the auth state with user data and token
+      setAuth(userForStore, token);
       
       toast({
         title: "Welcome back!",

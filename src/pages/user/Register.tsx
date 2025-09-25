@@ -66,10 +66,20 @@ export default function UserRegister() {
       }
       
       // Get user profile using the token
-      const profileResponse = await authApi.getProfile(token);
+      const profileResponse = await authApi.getProfile();
+      
+      // Create user object compatible with authStore
+      const userForStore = {
+        id: profileResponse.id,
+        email: profileResponse.email,
+        full_name: profileResponse.full_name || profileResponse.fullName,
+        phone: profileResponse.phone,
+        role: 'user' as 'admin' | 'user',
+        is_active: profileResponse.is_active !== undefined ? profileResponse.is_active : true
+      };
       
       // Set authentication state
-      setAuth(profileResponse, token);
+      setAuth(userForStore, token);
       
       toast({
         title: "Welcome!",

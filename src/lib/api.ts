@@ -18,12 +18,50 @@ export const authApi = {
     isAdmin?: boolean;
   }) => {
     const response = await apiClient.post('/auth/login', data);
-    return response.data;
+    const result = response.data;
+    
+    // Normalize user data to have consistent field names
+    if (result.data) {
+      // Create a normalized user object regardless of whether it was user or admin login
+      const originalData = result.data;
+      const normalizedData = {
+        id: originalData.id,
+        email: originalData.email,
+        full_name: originalData.full_name || originalData.fullName,
+        phone: originalData.phone,
+        is_active: originalData.is_active !== undefined ? originalData.is_active : null,
+        created_at: originalData.created_at,
+        updated_at: originalData.updated_at
+      };
+      
+      result.data = normalizedData;
+    }
+    
+    return result;
   },
 
   getProfile: async () => {
     const response = await apiClient.get('/auth/profile');
-    return response.data;
+    const result = response.data;
+    
+    // Normalize user data to have consistent field names
+    if (result.data) {
+      // Create a normalized user object regardless of whether it was user or admin login
+      const originalData = result.data;
+      const normalizedData = {
+        id: originalData.id,
+        email: originalData.email,
+        full_name: originalData.full_name || originalData.fullName,
+        phone: originalData.phone,
+        is_active: originalData.is_active !== undefined ? originalData.is_active : null,
+        created_at: originalData.created_at,
+        updated_at: originalData.updated_at
+      };
+      
+      result.data = normalizedData;
+    }
+    
+    return result;
   },
 };
 

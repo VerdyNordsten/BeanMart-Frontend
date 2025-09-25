@@ -22,8 +22,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function UserLogin() {
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAuthenticated, setAuth } = useAuthStore();
-  const { toast } = useToast();
+  const { user, isAuthenticated, isAdmin: isUserAdmin, setAuth } = useAuthStore();
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -34,12 +33,12 @@ export default function UserLogin() {
   });
 
   // Redirect if already authenticated
-  if (isAuthenticated && user?.role !== "admin") {
+  if (isAuthenticated && !isUserAdmin) {
     return <Navigate to="/user" replace />;
   }
 
   // Redirect admins to admin panel
-  if (isAuthenticated && user?.role === "admin") {
+  if (isAuthenticated && isUserAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
@@ -48,7 +47,7 @@ export default function UserLogin() {
     
     try {
       // For user login, we don't set isAdmin flag
-      const response = await authApi.login(data.email, data.password, false);
+      const response = await authApi.login({ email: data.email, password: data.password, isAdmin: false });
       
       // Handle the token field name difference
       const token = response.accessToken || response.token;
@@ -61,11 +60,38 @@ export default function UserLogin() {
         return;
       }
       
-      // Get user profile using the token
-      const profileResponse = await authApi.getProfile(token);
+      // Use the user data from the login response
+      const userData = response.data;
+      if (!userData) {
+        toast({
+          title: "Login Error",
+          description: "User data not found in response.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Decode token to get user type (admin/user)
+      let userType = 'user';
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        userType = payload.type || 'user';
+      } catch (e) {
+        console.error('Error decoding token:', e);
+      }
+      
+      // Create user object compatible with authStore
+      const userForStore = {
+        id: userData.id,
+        email: userData.email,
+        full_name: userData.full_name || userData.fullName,
+        phone: userData.phone,
+        role: userType as 'admin' | 'user',
+        is_active: userData.is_active !== undefined ? userData.is_active : true
+      };
       
       // Check if the user is an admin
-      if (profileResponse.role === "admin") {
+      if (userType === "admin") {
         toast({
           title: "Admin Account Detected",
           description: "You have admin privileges. You can access the admin panel.",
@@ -73,7 +99,7 @@ export default function UserLogin() {
       }
       
       // Set authentication state
-      setAuth(profileResponse, token);
+      setAuth(userForStore, token);
       
       toast({
         title: "Welcome back!",

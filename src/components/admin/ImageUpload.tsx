@@ -61,7 +61,7 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
       try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('variantId', variantId);
+        formData.append('variant_id', variantId);
         formData.append('position', (images.length + 1).toString());
 
         const response = await variantImagesApi.uploadAdvanced(formData);
@@ -126,7 +126,7 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
       try {
         const formData = new FormData();
         formData.append('url', urlInput);
-        formData.append('variantId', variantId);
+        formData.append('variant_id', variantId);
         formData.append('position', (images.length + 1).toString());
 
         const response = await variantImagesApi.uploadAdvanced(formData);
@@ -183,7 +183,7 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
             try {
               const formData = new FormData();
               formData.append('file', file);
-              formData.append('variantId', variantId);
+              formData.append('variant_id', variantId);
               formData.append('position', (images.length + 1).toString());
 
               const response = await variantImagesApi.uploadAdvanced(formData);

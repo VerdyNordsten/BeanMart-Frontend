@@ -10,6 +10,19 @@ export interface Product {
   created_at: string;
   updated_at: string;
   variants?: ProductVariant[];
+  // Additional fields for frontend display
+  price_min?: number;
+  price_max?: number;
+  origin?: string;
+  roast_level?: 'light' | 'medium' | 'dark';
+  tasting_notes?: string[];
+  processing_method?: string;
+  altitude?: string;
+  producer?: string;
+  harvest_date?: string;
+  is_featured?: boolean;
+  category_id?: string;
+  images?: VariantImage[];
 }
 
 export interface ProductVariant {
@@ -76,6 +89,16 @@ export interface PaginatedResponse<T> {
     limit: number;
     total: number;
     totalPages: number;
+  };
+}
+
+export interface ProductsResponse {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
   };
 }
 

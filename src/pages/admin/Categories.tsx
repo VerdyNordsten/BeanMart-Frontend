@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/lib/auth';
 import { categoriesApi } from '@/lib/api';
 import { CategoryForm } from '@/components/admin/CategoryForm';
 import type { Category } from '@/types/product';

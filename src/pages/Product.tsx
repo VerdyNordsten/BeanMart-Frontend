@@ -24,14 +24,7 @@ export default function ProductPage() {
   const loadProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {
-        search: searchParams.get('search') || undefined,
-        page: parseInt(searchParams.get('page') || '1'),
-        limit: parseInt(searchParams.get('limit') || '12'),
-        roast_level: searchParams.get('roast') || undefined,
-      };
-
-      const response = await api.getProducts(params);
+      const response = await api.getAllProducts();
 
       // Transform API response to match frontend expectations
       let products: Product[] = [];
@@ -46,41 +39,60 @@ export default function ProductPage() {
               name: string;
               short_description?: string;
               long_description?: string;
-              base_price?: number;
-              base_compare_at_price?: number;
               currency: string;
               is_active: boolean;
-              sku?: string;
-              weight_gram?: number;
               created_at: string;
               updated_at: string;
-              variants?: unknown[];
-              images?: unknown[];
+              variants?: Array<{
+                id: string;
+                product_id: string;
+                price: string;
+                compare_at_price?: string;
+                stock: number;
+                weight_gram?: number;
+                is_active: boolean;
+                created_at: string;
+                updated_at: string;
+                images?: Array<{
+                  id: string;
+                  variant_id: string;
+                  url: string;
+                  position: number;
+                  created_at: string;
+                  updated_at: string;
+                }>;
+              }>;
             };
+            
+            // Calculate price range from variants
+            const activeVariants = product.variants?.filter(v => v.is_active) || [];
+            const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => parseFloat(v.price))) : 0;
+            const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => parseFloat(v.price))) : 0;
+            
             return {
-            id: product.id,
-            slug: product.slug,
-            name: product.name,
-            short_description: product.short_description || '',
-            long_description: product.long_description || '',
-            price_min: product.base_price || 0,
-            price_max: product.base_compare_at_price || product.base_price || 0,
-            origin: '', // Not available in current API
-            roast_level: 'medium' as const, // Default value, would need to be extracted from product data
-            tasting_notes: [], // Not available in current API
-            processing_method: '', // Not available in current API
-            altitude: '', // Not available in current API
-            producer: '', // Not available in current API
-            harvest_date: '', // Not available in current API
-            is_featured: false, // Not available in current API
-            is_active: product.is_active !== false,
-            category_id: '', // Not available in current API
-            created_at: product.created_at,
-            updated_at: product.updated_at,
-            variants: product.variants || [],
-            images: product.images || []
-          };
-        });
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              short_description: product.short_description || '',
+              long_description: product.long_description || '',
+              price_min: minPrice,
+              price_max: maxPrice,
+              origin: '', // Not available in current API
+              roast_level: 'medium' as const, // Default value
+              tasting_notes: [], // Not available in current API
+              processing_method: '', // Not available in current API
+              altitude: '', // Not available in current API
+              producer: '', // Not available in current API
+              harvest_date: '', // Not available in current API
+              is_featured: false, // Not available in current API
+              is_active: product.is_active !== false,
+              category_id: '', // Not available in current API
+              created_at: product.created_at,
+              updated_at: product.updated_at,
+              variants: activeVariants,
+              images: [] // Images are now part of variants
+            };
+          });
       }
       
       // Apply client-side filters
@@ -120,7 +132,7 @@ export default function ProductPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchParams, searchQuery, priceFilter]);
+  }, [searchQuery, priceFilter]);
 
   useEffect(() => {
     loadProducts();

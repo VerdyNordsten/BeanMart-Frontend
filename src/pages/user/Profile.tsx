@@ -30,9 +30,18 @@ export default function UserProfile() {
     const fetchUserProfile = async () => {
       try {
         if (token) {
-          const profileResponse = await authApi.getProfile(token);
+          const profileResponse = await authApi.getProfile();
+          // Create user object compatible with authStore
+          const userForStore = {
+            id: profileResponse.id,
+            email: profileResponse.email,
+            full_name: profileResponse.full_name || profileResponse.fullName,
+            phone: profileResponse.phone,
+            role: 'user' as 'admin' | 'user',
+            is_active: profileResponse.is_active !== undefined ? profileResponse.is_active : true
+          };
           // Update the auth store with fresh data
-          setAuth(profileResponse, token);
+          setAuth(userForStore, token);
         }
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
@@ -96,6 +105,8 @@ export default function UserProfile() {
           full_name: data.full_name,
           email: data.email,
           phone: data.phone,
+          role: user?.role || 'user' as 'admin' | 'user',
+          is_active: user?.is_active !== undefined ? user.is_active : true
         };
         setAuth(updatedUser, token);
         
