@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ProductGrid } from '@/components/ui/ProductGrid';
-import { productsApi as api } from '@/lib/api';
-import { Product, ProductsResponse } from '@/types/product';
+import { productsApi as api, categoriesApi, roastLevelsApi } from '@/lib/api';
+import { Product, ProductsResponse, Category, RoastLevel } from '@/types/product';
 import { Search, Filter, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 export default function ProductPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,8 +19,22 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [roastFilter, setRoastFilter] = useState(searchParams.get('roast') || '');
-  const [priceFilter, setPriceFilter] = useState(searchParams.get('price') || '');
-  const [inStockOnly, setInStockOnly] = useState(searchParams.get('in_stock') === 'true');
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category') || '');
+  const [weightFilter, setWeightFilter] = useState(searchParams.get('weight') || '');
+
+  // Fetch categories and roast levels
+  const { data: categoriesResponse } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAllCategories(),
+  });
+
+  const { data: roastLevelsResponse } = useQuery({
+    queryKey: ['roast-levels'],
+    queryFn: () => roastLevelsApi.getAllRoastLevels(),
+  });
+
+  const categories = categoriesResponse?.data || [];
+  const roastLevels = roastLevelsResponse?.data || [];
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -43,6 +58,16 @@ export default function ProductPage() {
               is_active: boolean;
               created_at: string;
               updated_at: string;
+              categories?: Array<{
+                id: string;
+                name: string;
+                slug: string;
+              }>;
+              roastLevels?: Array<{
+                id: string;
+                name: string;
+                slug: string;
+              }>;
               variants?: Array<{
                 id: string;
                 product_id: string;
@@ -65,9 +90,15 @@ export default function ProductPage() {
             };
             
             // Calculate price range from variants
-            const activeVariants = product.variants?.filter(v => v.is_active) || [];
-            const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => parseFloat(v.price))) : 0;
-            const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => parseFloat(v.price))) : 0;
+            const activeVariants = product.variants?.filter(v => v.is_active).map(v => ({
+              ...v,
+              price: Number(v.price),
+              compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
+              stock: Number(v.stock),
+              weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
+            })) || [];
+            const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => v.price)) : 0;
+            const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => v.price)) : 0;
             
             return {
               id: product.id,
@@ -78,7 +109,7 @@ export default function ProductPage() {
               price_min: minPrice,
               price_max: maxPrice,
               origin: '', // Not available in current API
-              roast_level: 'medium' as const, // Default value
+              roast_level: 'medium' as const, // Default value - will be overridden by actual roast levels
               tasting_notes: [], // Not available in current API
               processing_method: '', // Not available in current API
               altitude: '', // Not available in current API
@@ -90,7 +121,9 @@ export default function ProductPage() {
               created_at: product.created_at,
               updated_at: product.updated_at,
               variants: activeVariants,
-              images: [] // Images are now part of variants
+              images: [], // Images are now part of variants
+              categories: product.categories || [],
+              roastLevels: product.roastLevels || []
             };
           });
       }
@@ -106,17 +139,30 @@ export default function ProductPage() {
         );
       }
       
-      // Price filter (client-side)
-      if (priceFilter) {
-        const [min, max] = priceFilter.split('-').map(Number);
-        filteredProducts = filteredProducts.filter(p => {
-          const minPrice = p.price_min;
-          return minPrice >= min && minPrice <= max;
-        });
+      // Category filter
+      if (categoryFilter) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.categories?.some((cat: { category_id: string }) => cat.category_id === categoryFilter)
+        );
       }
       
-      // Note: Other filters like roast level, in stock, etc. would need to be implemented
-      // based on actual product data from the API
+      // Roast level filter
+      if (roastFilter) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.roastLevels?.some((roast: { roast_level_id: string }) => roast.roast_level_id === roastFilter)
+        );
+      }
+      
+      // Weight filter (client-side)
+      if (weightFilter) {
+        const [min, max] = weightFilter.split('-').map(Number);
+        filteredProducts = filteredProducts.filter(p => {
+          return p.variants?.some(v => {
+            const weight = v.weight_gram || 0;
+            return weight >= min && weight <= max;
+          });
+        });
+      }
 
       setProductsData({
         products: filteredProducts,
@@ -132,7 +178,7 @@ export default function ProductPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, priceFilter]);
+  }, [searchQuery, categoryFilter, roastFilter, weightFilter]);
 
   useEffect(() => {
     loadProducts();
@@ -152,8 +198,8 @@ export default function ProductPage() {
   const clearFilters = () => {
     setSearchQuery('');
     setRoastFilter('');
-    setPriceFilter('');
-    setInStockOnly(false);
+    setCategoryFilter('');
+    setWeightFilter('');
     setSearchParams({});
   };
 
@@ -165,8 +211,8 @@ export default function ProductPage() {
   const activeFiltersCount = [
     searchQuery,
     roastFilter,
-    priceFilter,
-    inStockOnly ? 'in_stock' : ''
+    categoryFilter,
+    weightFilter
   ].filter(Boolean).length;
 
   return (
@@ -224,6 +270,29 @@ export default function ProductPage() {
                 </form>
               </div>
 
+              {/* Category */}
+              <div className="space-y-2 mb-6">
+                <label className="text-sm font-medium text-coffee-dark">
+                  Category
+                </label>
+                <Select value={categoryFilter} onValueChange={(value) => {
+                  setCategoryFilter(value === 'all' ? '' : value);
+                  updateFilters('category', value === 'all' ? '' : value);
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {categories.map((category: Category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Roast Level */}
               <div className="space-y-2 mb-6">
                 <label className="text-sm font-medium text-coffee-dark">
@@ -238,50 +307,35 @@ export default function ProductPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All roasts</SelectItem>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
+                    {roastLevels.map((roastLevel: RoastLevel) => (
+                      <SelectItem key={roastLevel.id} value={roastLevel.id}>
+                        {roastLevel.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Price Range */}
+              {/* Weight Range */}
               <div className="space-y-2 mb-6">
                 <label className="text-sm font-medium text-coffee-dark">
-                  Price Range
+                  Weight Range
                 </label>
-                <Select value={priceFilter} onValueChange={(value) => {
-                  setPriceFilter(value === 'all' ? '' : value);
-                  updateFilters('price', value === 'all' ? '' : value);
+                <Select value={weightFilter} onValueChange={(value) => {
+                  setWeightFilter(value === 'all' ? '' : value);
+                  updateFilters('weight', value === 'all' ? '' : value);
                 }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All prices" />
+                    <SelectValue placeholder="All weights" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All prices</SelectItem>
-                    <SelectItem value="0-50000">Under 50K</SelectItem>
-                    <SelectItem value="50000-100000">50K - 100K</SelectItem>
-                    <SelectItem value="100000-150000">100K - 150K</SelectItem>
-                    <SelectItem value="150000-1000000">150K+</SelectItem>
+                    <SelectItem value="all">All weights</SelectItem>
+                    <SelectItem value="0-250">Under 250g</SelectItem>
+                    <SelectItem value="250-500">250g - 500g</SelectItem>
+                    <SelectItem value="500-1000">500g - 1kg</SelectItem>
+                    <SelectItem value="1000-10000">1kg+</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* In Stock */}
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="in-stock"
-                  checked={inStockOnly}
-                  onChange={(e) => {
-                    setInStockOnly(e.target.checked);
-                    updateFilters('in_stock', e.target.checked ? 'true' : '');
-                  }}
-                  className="rounded border-coffee-light"
-                />
-                <label htmlFor="in-stock" className="text-sm text-coffee-dark">
-                  In stock only
-                </label>
               </div>
             </div>
           </aside>
@@ -303,9 +357,21 @@ export default function ProductPage() {
                     />
                   </Badge>
                 )}
+                {categoryFilter && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    {categories.find((cat: Category) => cat.id === categoryFilter)?.name || 'Category'}
+                    <X 
+                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                      onClick={() => {
+                        setCategoryFilter('');
+                        updateFilters('category', '');
+                      }}
+                    />
+                  </Badge>
+                )}
                 {roastFilter && (
                   <Badge variant="outline" className="flex items-center gap-1">
-                    {roastFilter} roast
+                    {roastLevels.find((roast: RoastLevel) => roast.id === roastFilter)?.name || 'Roast'}
                     <X 
                       className="h-3 w-3 cursor-pointer hover:text-destructive" 
                       onClick={() => {
@@ -315,26 +381,14 @@ export default function ProductPage() {
                     />
                   </Badge>
                 )}
-                {priceFilter && (
+                {weightFilter && (
                   <Badge variant="outline" className="flex items-center gap-1">
-                    {priceFilter.replace('-', ' - ')}
+                    {weightFilter.replace('-', ' - ')}g
                     <X 
                       className="h-3 w-3 cursor-pointer hover:text-destructive" 
                       onClick={() => {
-                        setPriceFilter('');
-                        updateFilters('price', '');
-                      }}
-                    />
-                  </Badge>
-                )}
-                {inStockOnly && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    In stock
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        setInStockOnly(false);
-                        updateFilters('in_stock', '');
+                        setWeightFilter('');
+                        updateFilters('weight', '');
                       }}
                     />
                   </Badge>

@@ -4,7 +4,7 @@ import { debug, logApi, logResponse, logError } from '@/utils/debug';
 
 // Create axios instance
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 10000, // Keep default timeout low for normal requests
   headers: {
     'Content-Type': 'application/json',
@@ -13,7 +13,7 @@ export const apiClient = axios.create({
 
 // Create special instance for file uploads with longer timeout
 export const uploadApiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 120000, // 2 minutes timeout for upload operations
   headers: {
     'Content-Type': 'application/json',

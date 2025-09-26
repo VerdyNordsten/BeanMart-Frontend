@@ -14,13 +14,20 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import { AlertCircle } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription 
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ordersApi } from '@/lib/api';
 import { formatAPIError } from '@/lib/api-client';
@@ -47,7 +54,37 @@ export default function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
-  const [selectedOrder, setSelectedOrder] = useState<unknown>(null);
+  const [selectedOrder, setSelectedOrder] = useState<{
+    id: string;
+    order_number: string;
+    status: string;
+    total_amount: string | number;
+    created_at: string;
+    user_id: string;
+    shipping_address: { 
+      fullName: string; 
+      address: string; 
+      city: string; 
+      state: string; 
+      postalCode: string; 
+      phone: string; 
+    };
+    billing_address: { 
+      fullName: string; 
+      address: string; 
+      city: string; 
+      state: string; 
+      postalCode: string; 
+      phone: string; 
+    };
+    items: Array<{ 
+      product_name: string; 
+      quantity: number; 
+      price_per_unit: string; 
+      total_price: string;
+      product_image?: string;
+    }>;
+  } | null>(null);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   
   const { toast } = useToast();
@@ -57,20 +94,23 @@ export default function AdminOrders() {
   const limit = parseInt(searchParams.get('limit') || '10');
 
   // Fetch orders
-  const { data: ordersData, isLoading } = useQuery({
+  const { data: ordersData, isLoading, error } = useQuery({
     queryKey: ['admin-orders', page, limit, searchQuery, statusFilter],
-    queryFn: () => ordersApi.getOrders({
+    queryFn: () => ordersApi.getAllOrders({
       page,
       limit,
       search: searchQuery || undefined,
       status: statusFilter || undefined,
     }),
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache
+    refetchOnWindowFocus: true,
   });
 
   // Update order status mutation
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => 
-      ordersApi.updateOrderStatus(id, status),
+      ordersApi.updateOrderStatus(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       toast({
@@ -120,10 +160,17 @@ export default function AdminOrders() {
 
   const handleViewOrder = async (orderId: string) => {
     try {
-      const order = await ordersApi.getOrder(orderId);
-      setSelectedOrder(order);
-      setShowOrderDetail(true);
+      const response = await ordersApi.getOrder(orderId);
+      
+      // The backend returns { success: true, data: orderObject }
+      if (response.success) {
+        setSelectedOrder(response.data);
+        setShowOrderDetail(true);
+      } else {
+        throw new Error(response.message || "Failed to load order details");
+      }
     } catch (error) {
+      console.error('Failed to load order details:', error);
       const apiError = formatAPIError(error);
       toast({
         title: "Failed to load order",
@@ -152,8 +199,33 @@ export default function AdminOrders() {
     );
   }
 
-  const orders = ordersData?.orders || [];
-  const pagination = ordersData?.pagination || { page: 1, limit: 10, total: 0, total_pages: 0 };
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="font-display text-3xl font-bold text-coffee-dark">Orders</h1>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error Loading Orders</h3>
+              <p className="text-muted-foreground mb-4">
+                {error instanceof Error ? error.message : 'An error occurred while loading orders'}
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const orders = ordersData?.data?.orders || [];
+  const pagination = ordersData?.data?.pagination || { page: 1, limit: 10, total: 0, total_pages: 0 };
+
 
   return (
     <div className="space-y-6">
@@ -237,11 +309,20 @@ export default function AdminOrders() {
                   {orders.map((order: unknown) => {
                     const orderData = order as {
                       id: string;
+                      order_number: string;
                       status: string;
                       total_amount: string | number;
                       created_at: string;
-                      user: { full_name: string; email: string };
-                      shipping_address: { street_address: string; city: string; state: string; postal_code: string };
+                      user_id: string;
+                      shipping_address: { 
+                        fullName: string; 
+                        address: string; 
+                        city: string; 
+                        state: string; 
+                        postalCode: string; 
+                        phone: string; 
+                      };
+                      items: Array<{ product_name: string; quantity: number; price_per_unit: string }>;
                     };
                     const statusInfo = statusConfig[orderData.status as keyof typeof statusConfig];
                     const StatusIcon = statusInfo?.icon || Clock;
@@ -250,16 +331,19 @@ export default function AdminOrders() {
                       <TableRow key={orderData.id}>
                         <TableCell>
                           <div className="font-mono text-sm">
-                            #{orderData.id.slice(-8).toUpperCase()}
+                            {orderData.order_number}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {orderData.user.full_name || 'Unknown Customer'}
+                              {orderData.shipping_address?.fullName || 'Unknown Customer'}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {orderData.user.email}
+                              {orderData.shipping_address?.phone}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {orderData.shipping_address?.address}, {orderData.shipping_address?.city}
                             </div>
                           </div>
                         </TableCell>
@@ -371,131 +455,172 @@ export default function AdminOrders() {
         </CardContent>
       </Card>
 
-      {/* Order Detail Sheet */}
-      <Sheet open={showOrderDetail} onOpenChange={setShowOrderDetail}>
-        <SheetContent className="w-[600px] sm:max-w-[600px]">
-          <SheetHeader>
-            <SheetTitle className="font-display text-xl text-coffee-dark">
+      {/* Order Detail Dialog */}
+      <Dialog open={showOrderDetail} onOpenChange={setShowOrderDetail}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-coffee-dark">
               Order Details
-            </SheetTitle>
-          </SheetHeader>
+            </DialogTitle>
+            <DialogDescription>
+              View and manage order information
+            </DialogDescription>
+          </DialogHeader>
           
-          {selectedOrder && (
-            <div className="mt-6 space-y-6">
-              {/* Order Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Order Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Order ID</div>
-                      <div className="font-mono">#{selectedOrder.id.slice(-8).toUpperCase()}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Date</div>
-                      <div>{new Date(selectedOrder.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Status</div>
-                      <Badge className={statusConfig[selectedOrder.status as keyof typeof statusConfig]?.color}>
-                        {statusConfig[selectedOrder.status as keyof typeof statusConfig]?.label}
-                      </Badge>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Total</div>
-                      <div className="font-semibold">${parseFloat(selectedOrder.total_amount || 0).toFixed(2)}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Customer Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Customer Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Name: </span>
-                      <span>{selectedOrder.customer_name || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Email: </span>
-                      <span>{selectedOrder.customer_email || 'N/A'}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Addresses */}
-              {(selectedOrder.shipping_address || selectedOrder.billing_address) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Addresses</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {selectedOrder.shipping_address && (
-                        <div>
-                          <div className="font-medium mb-2">Shipping Address</div>
-                          <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
-                            {JSON.stringify(selectedOrder.shipping_address, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                      {selectedOrder.billing_address && (
-                        <div>
-                          <div className="font-medium mb-2">Billing Address</div>
-                          <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
-                            {JSON.stringify(selectedOrder.billing_address, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Order Items */}
-              {selectedOrder.items && selectedOrder.items.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Order Items</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {selectedOrder.items.map((item: unknown, index: number) => {
-                        const itemData = item as {
-                          product_name?: string;
-                          name?: string;
-                          quantity: number;
-                          price: number;
-                        };
-                        return (
-                        <div key={index} className="flex justify-between items-center border-b pb-2 last:border-b-0">
+          {selectedOrder ? (
+            <div className="mt-4 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Order Summary */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Order Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <div className="font-medium">{itemData.product_name || itemData.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Qty: {itemData.quantity} × ${itemData.price}
+                            <div className="text-sm text-muted-foreground">Order Number</div>
+                            <div className="font-mono">{selectedOrder.order_number || 'N/A'}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Date</div>
+                            <div>{new Date(selectedOrder.created_at).toLocaleDateString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Status</div>
+                            <Badge className={statusConfig[selectedOrder.status as keyof typeof statusConfig]?.color}>
+                              {statusConfig[selectedOrder.status as keyof typeof statusConfig]?.label}
+                            </Badge>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Total</div>
+                            <div className="font-semibold">
+                              {new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                              }).format(parseFloat(String(selectedOrder.total_amount || 0)))}
                             </div>
                           </div>
-                          <div className="font-medium">
-                            ${(itemData.quantity * itemData.price).toFixed(2)}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Customer Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Customer Information</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-muted-foreground">Name: </span>
+                            <span>{selectedOrder.shipping_address?.fullName || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-muted-foreground">Phone: </span>
+                            <span>{selectedOrder.shipping_address?.phone || 'N/A'}</span>
                           </div>
                         </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-6">
+                    {/* Addresses */}
+                    {(selectedOrder.shipping_address || selectedOrder.billing_address) && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Addresses</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {selectedOrder.shipping_address && (
+                              <div>
+                                <div className="font-medium mb-2">Shipping Address</div>
+                                <div className="text-sm text-muted-foreground space-y-1">
+                                  <div>{selectedOrder.shipping_address.fullName}</div>
+                                  <div>{selectedOrder.shipping_address.address}</div>
+                                  <div>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.postalCode}</div>
+                                  <div>{selectedOrder.shipping_address.phone}</div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedOrder.billing_address && (
+                              <div>
+                                <div className="font-medium mb-2">Billing Address</div>
+                                <div className="text-sm text-muted-foreground space-y-1">
+                                  <div>{selectedOrder.billing_address.fullName}</div>
+                                  <div>{selectedOrder.billing_address.address}</div>
+                                  <div>{selectedOrder.billing_address.city}, {selectedOrder.billing_address.state} {selectedOrder.billing_address.postalCode}</div>
+                                  <div>{selectedOrder.billing_address.phone}</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+
+                {/* Order Items - Full Width */}
+                {selectedOrder.items && selectedOrder.items.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Order Items</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {selectedOrder.items.map((item, index: number) => {
+                          return (
+                          <div key={index} className="flex gap-4 items-start border-b pb-4 last:border-b-0">
+                            {item.product_image && (
+                              <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
+                                <img 
+                                  src={item.product_image} 
+                                  alt={item.product_name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-medium">{item.product_name}</div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                Qty: {item.quantity} × {new Intl.NumberFormat("en-US", {
+                                  style: "currency",
+                                  currency: "USD",
+                                }).format(parseFloat(item.price_per_unit))}
+                              </div>
+                            </div>
+                            <div className="font-medium text-right">
+                              {new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                              }).format(parseFloat(item.total_price))}
+                            </div>
+                          </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+            </div>
+          ) : (
+            <div className="mt-6 flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coffee-dark mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading order details...</p>
+              </div>
             </div>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

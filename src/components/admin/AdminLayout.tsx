@@ -13,7 +13,8 @@ import {
   Users, 
   FileImage,
   LogOut,
-  Coffee
+  Coffee,
+  Flame
 } from 'lucide-react';
 import { useAuthStore, isAdmin } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: Tags },
+  { name: 'Roast Levels', href: '/admin/roast-levels', icon: Flame },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Files', href: '/admin/files', icon: FileImage },
@@ -91,7 +93,7 @@ export function AdminLayout() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {user.first_name} {user.last_name}
+                    {user.full_name}
                   </p>
                   <Badge variant="outline" className="text-xs mt-1">
                     {user.role}
@@ -156,7 +158,7 @@ export function AdminLayout() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {user.first_name} {user.last_name}
+                    {user.full_name}
                   </p>
                   <Badge variant="outline" className="text-xs mt-1">
                     {user.role}

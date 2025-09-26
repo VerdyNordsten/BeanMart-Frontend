@@ -10,6 +10,8 @@ export interface Product {
   created_at: string;
   updated_at: string;
   variants?: ProductVariant[];
+  categories?: Category[];
+  roastLevels?: RoastLevel[];
   // Additional fields for frontend display
   price_min?: number;
   price_max?: number;
@@ -78,7 +80,7 @@ export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   message?: string;
-  error?: any;
+  error?: unknown;
 }
 
 export interface PaginatedResponse<T> {
@@ -116,6 +118,20 @@ export interface CategoryFormData {
   name: string;
 }
 
+// ===== ROAST LEVEL TYPES =====
+export interface RoastLevel {
+  id: string;
+  slug: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoastLevelFormData {
+  slug: string;
+  name: string;
+}
+
 // ===== USER TYPES =====
 export interface User {
   id: string;
@@ -145,11 +161,13 @@ export interface UserAddress {
 export interface Order {
   id: string;
   user_id: string;
-  address_id: string;
+  order_number: string;
   status: string;
   total_amount: number;
   shipping_cost: number;
-  tracking_number?: string;
+  currency: string;
+  shipping_address?: Record<string, unknown>;
+  billing_address?: Record<string, unknown>;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -159,11 +177,22 @@ export interface Order {
 export interface OrderItem {
   id: string;
   order_id: string;
-  variant_id: string;
+  product_variant_id: string;
   quantity: number;
-  price: number;
+  price_per_unit: number;
+  total_price: number;
   created_at: string;
-  updated_at: string;
+  // Product details from join
+  variant_id?: string;
+  variant_price?: number;
+  variant_stock?: number;
+  weight_gram?: number;
+  variant_active?: boolean;
+  product_name?: string;
+  product_slug?: string;
+  product_description?: string;
+  product_currency?: string;
+  product_image?: string;
 }
 
 // ===== AUTH TYPES =====

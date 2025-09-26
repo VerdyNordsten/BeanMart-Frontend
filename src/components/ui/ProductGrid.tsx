@@ -4,14 +4,12 @@ import { ProductCard } from './ProductCard';
 interface ProductGridProps {
   products: Product[];
   loading?: boolean;
-  showAddToCart?: boolean;
   className?: string;
 }
 
 export function ProductGrid({ 
   products, 
   loading = false, 
-  showAddToCart = true,
   className = '' 
 }: ProductGridProps) {
   if (loading) {
@@ -53,7 +51,6 @@ export function ProductGrid({
         <ProductCard
           key={product.id}
           product={product}
-          showAddToCart={showAddToCart}
         />
       ))}
     </div>

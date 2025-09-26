@@ -30,13 +30,6 @@ export default function UserDashboard() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [addressesLoading, setAddressesLoading] = useState(true);
 
-  useEffect(() => {
-    if (user && token) {
-      fetchUserOrders();
-      fetchUserAddresses();
-    }
-  }, [user, token, fetchUserOrders, fetchUserAddresses]);
-
   const fetchUserOrders = useCallback(async () => {
     try {
       setOrdersLoading(true);
@@ -64,6 +57,13 @@ export default function UserDashboard() {
       setAddressesLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user && token) {
+      fetchUserOrders();
+      fetchUserAddresses();
+    }
+  }, [user, token, fetchUserOrders, fetchUserAddresses]);
 
   return (
     <div className="space-y-6">

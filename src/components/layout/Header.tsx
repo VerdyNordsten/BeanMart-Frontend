@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/lib/auth';
+import { useCartStore } from '@/lib/cart';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -35,6 +36,7 @@ export function Header() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { getTotalItems, openCart } = useCartStore();
 
   const handleLogout = () => {
     logout();
@@ -76,10 +78,15 @@ export function Header() {
             <span className="sr-only">Search</span>
           </Button>
           
-          <Button variant="ghost" size="icon" className="relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="relative"
+            onClick={openCart}
+          >
             <ShoppingCart className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-coffee-medium text-cream text-xs flex items-center justify-center">
-              0
+              {getTotalItems()}
             </span>
             <span className="sr-only">Shopping cart</span>
           </Button>

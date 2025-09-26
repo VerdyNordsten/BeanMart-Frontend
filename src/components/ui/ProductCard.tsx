@@ -3,25 +3,31 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Product } from '@/types/product';
-import { ShoppingCart, Star, Package } from 'lucide-react';
+import { Star, Package } from 'lucide-react';
 import { formatPrice, formatPriceRange, getCurrencySymbol } from '@/utils/currency';
 
 interface ProductCardProps {
   product: Product;
-  showAddToCart?: boolean;
 }
 
-export function ProductCard({ product, showAddToCart = true }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
+  
   // Get active variants
-  const activeVariants = product.variants?.filter(variant => variant.is_active) || [];
+  const activeVariants = product.variants?.filter(variant => variant.is_active).map(v => ({
+    ...v,
+    price: Number(v.price),
+    compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
+    stock: Number(v.stock),
+    weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
+  })) || [];
   
   // Get the first image from the first variant or product images
   const primaryImage = activeVariants[0]?.images?.[0]?.url || 
                       (product.images && product.images.length > 0 ? product.images[0].url : '');
   
   // Calculate price range from variants
-  const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => parseFloat(v.price))) : product.price_min;
-  const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => parseFloat(v.price))) : product.price_max;
+  const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => v.price)) : product.price_min;
+  const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => v.price)) : product.price_max;
   const hasPriceRange = minPrice !== maxPrice;
   
   // Format price display using currency utility
@@ -32,17 +38,11 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
   // Get total stock
   const totalStock = activeVariants.reduce((sum, variant) => sum + variant.stock, 0);
 
-  // Default roast level if not provided
-  const roastLevel = product.roast_level || 'medium';
-  
-  const roastLevelColors: Record<string, string> = {
-    light: 'bg-caramel/20 text-caramel border-caramel/30',
-    medium: 'bg-coffee-medium/20 text-coffee-medium border-coffee-medium/30',
-    dark: 'bg-coffee-dark/20 text-coffee-dark border-coffee-dark/30',
-  };
+  // Get roast levels from database
+  const roastLevels = product.roastLevels || [];
 
   return (
-    <Card className="group overflow-hidden card-shadow hover:warm-shadow smooth-transition hover:-translate-y-1">
+    <Card className="group overflow-hidden card-shadow hover:warm-shadow smooth-transition hover:-translate-y-1 h-full flex flex-col">
       <Link to={`/product/${product.slug}`}>
         <div className="aspect-square overflow-hidden bg-muted relative">
           {primaryImage ? (
@@ -71,24 +71,20 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
         </div>
       </Link>
       
-      <CardContent className="p-4">
+      <CardContent className="p-3 flex-1 flex flex-col">
         <div className="flex items-start justify-between mb-2">
-          <Link to={`/product/${product.slug}`}>
-            <h3 className="font-display font-semibold text-lg text-coffee-dark hover:text-coffee-medium smooth-transition">
-              {product.name}
+          <Link to={`/product/${product.slug}`} className="flex-1">
+            <h3 className="font-display font-semibold text-base text-coffee-dark hover:text-coffee-medium smooth-transition line-clamp-1" title={product.name}>
+              {product.name.length > 30 ? `${product.name.substring(0, 30)}...` : product.name}
             </h3>
           </Link>
           {product.is_featured && (
-            <Star className="h-4 w-4 text-caramel fill-caramel" />
+            <Star className="h-4 w-4 text-caramel fill-caramel flex-shrink-0 ml-2" />
           )}
         </div>
-        
-        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-          {product.short_description}
-        </p>
 
         {/* Price Display */}
-        <div className="mb-3">
+        <div className="mb-2">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-coffee-dark text-lg">
               {priceDisplay}
@@ -101,68 +97,78 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
           )}
         </div>
 
-        {/* Variants Info */}
+        {/* Weight Range and Stock Info - in one line */}
         {activeVariants.length > 0 && (
-          <div className="mb-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Package className="h-4 w-4" />
-              <span>{activeVariants.length} variant{activeVariants.length !== 1 ? 's' : ''}</span>
-            </div>
-            
-            {totalStock > 0 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>{totalStock} in stock</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Variants Preview */}
-        {activeVariants.length > 0 && activeVariants.length <= 3 && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-coffee-dark mb-2">Available Variants:</p>
-            <div className="space-y-1">
-              {activeVariants.map((variant) => (
-                <div key={variant.id} className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    {variant.weight_gram ? `${variant.weight_gram}g` : 'Standard'}
-                  </span>
-                  <span className="font-medium">{formatPrice(variant.price, product.currency)}</span>
+          <div className="mb-2">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              {(() => {
+                // Get weight range from variants
+                const weightsInGrams = activeVariants
+                  .map(v => v.weight_gram)
+                  .filter(w => w && w > 0)
+                  .sort((a, b) => a - b);
+                
+                if (weightsInGrams.length > 0) {
+                  const minWeight = weightsInGrams[0];
+                  const maxWeight = weightsInGrams[weightsInGrams.length - 1];
+                  
+                  // Format weight display
+                  const formatWeight = (grams: number) => {
+                    if (grams >= 1000) {
+                      return `${(grams / 1000).toFixed(grams % 1000 === 0 ? 0 : 1)}kg`;
+                    }
+                    return `${grams}g`;
+                  };
+                  
+                  const weightDisplay = minWeight === maxWeight 
+                    ? formatWeight(minWeight)
+                    : `${formatWeight(minWeight)} - ${formatWeight(maxWeight)}`;
+                  
+                  return (
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      <span>{weightDisplay}</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+              
+              {totalStock > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>{totalStock} in stock</span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
 
-        {/* Roast Level and Origin */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge 
-            variant="outline" 
-            className={`text-xs ${roastLevelColors[roastLevel]}`}
-          >
-            {roastLevel} roast
-          </Badge>
-          {product.origin && (
+
+        {/* Roast Levels - limit to 2 badges */}
+        <div className="flex flex-wrap gap-1 mb-3">
+          {roastLevels.slice(0, 2).map((roastLevel: { roast_level_id: string; name: string }) => (
+            <Badge 
+              key={roastLevel.roast_level_id}
+              variant="outline" 
+              className="text-xs bg-orange-100 text-orange-800 border-orange-200"
+            >
+              {roastLevel.roast_level_name}
+            </Badge>
+          ))}
+          {roastLevels.length > 2 && (
             <Badge variant="outline" className="text-xs text-muted-foreground">
-              {product.origin.split(',')[0]}
+              +{roastLevels.length - 2} more
             </Badge>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <Button asChild variant="outline" size="sm">
+        <div className="mt-auto">
+          <Button asChild variant="coffee" size="sm" className="w-full">
             <Link to={`/product/${product.slug}`}>
               View Details
             </Link>
           </Button>
-          
-          {showAddToCart && product.is_active && totalStock > 0 && (
-            <Button size="sm" variant="coffee" className="h-8">
-              <ShoppingCart className="h-4 w-4 mr-1" />
-              Add
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

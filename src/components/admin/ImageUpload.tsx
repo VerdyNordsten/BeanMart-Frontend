@@ -80,10 +80,11 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
         } else {
           throw new Error(response.message || 'Upload failed');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
         toast({
           title: 'Upload failed',
-          description: error.message || 'Failed to upload image',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
@@ -158,10 +159,10 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
         } else {
           throw new Error(response.message || 'Upload failed');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           title: 'Upload failed',
-          description: error.message || 'Failed to download and upload image',
+          description: error instanceof Error ? error.message : 'Failed to download and upload image',
           variant: 'destructive',
         });
       }
@@ -228,10 +229,10 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
               } else {
                 throw new Error(response.message || 'Upload failed');
               }
-            } catch (error: any) {
+            } catch (error: unknown) {
               toast({
                 title: 'Upload failed',
-                description: error.message || 'Failed to download and upload pasted URL',
+                description: error instanceof Error ? error.message : 'Failed to download and upload pasted URL',
                 variant: 'destructive',
               });
             }
@@ -286,10 +287,10 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
               } else {
                 throw new Error(response.message || 'Upload failed');
               }
-            } catch (error: any) {
+            } catch (error: unknown) {
               toast({
                 title: 'Upload failed',
-                description: error.message || 'Failed to upload pasted image',
+                description: error instanceof Error ? error.message : 'Failed to upload pasted image',
                 variant: 'destructive',
               });
             }
@@ -348,10 +349,10 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
         } else {
           throw new Error(response.message || 'Delete failed');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           title: 'Delete failed',
-          description: error.message || 'Failed to delete image',
+          description: error instanceof Error ? error.message : 'Failed to delete image',
           variant: 'destructive',
         });
       }

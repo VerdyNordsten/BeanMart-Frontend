@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { productsApi } from '@/lib/api';
+import { productsApi, categoriesApi, roastLevelsApi } from '@/lib/api';
 import { formatPrice, getCurrencySymbol } from '@/utils/currency';
-import { Product, ProductVariant } from '@/types/product';
+import { formatDescription } from '@/utils/textFormatter';
+import { Product, ProductVariant, Category, RoastLevel } from '@/types/product';
+import { useQuery } from '@tanstack/react-query';
+import { useCartStore } from '@/lib/cart';
 import { 
   ShoppingCart, 
   Star, 
@@ -28,12 +31,27 @@ import { toast } from 'sonner';
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { addItem, openCart } = useCartStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  // Fetch categories and roast levels for display
+  const { data: categoriesResponse } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAllCategories(),
+  });
+
+  const { data: roastLevelsResponse } = useQuery({
+    queryKey: ['roast-levels'],
+    queryFn: () => roastLevelsApi.getAllRoastLevels(),
+  });
+
+  const categories = categoriesResponse?.data || [];
+  const roastLevels = roastLevelsResponse?.data || [];
 
   useEffect(() => {
     if (slug) {
@@ -64,14 +82,26 @@ export default function ProductDetail() {
           is_active: productData.is_active !== false,
           created_at: productData.created_at,
           updated_at: productData.updated_at,
-          variants: productData.variants?.filter((v: any) => v.is_active) || [],
+          variants: productData.variants?.filter((v: { is_active: boolean }) => v.is_active).map((v: {
+            price: string;
+            compare_at_price?: string;
+            stock: string;
+            weight_gram?: string;
+            [key: string]: unknown;
+          }) => ({
+            ...v,
+            price: Number(v.price),
+            compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
+            stock: Number(v.stock),
+            weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
+          })) || [],
           images: productData.images || [],
           // Calculate price range from variants
           price_min: productData.variants?.length > 0 
-            ? Math.min(...productData.variants.map((v: any) => parseFloat(v.price)))
+            ? Math.min(...productData.variants.map((v: { price: string }) => parseFloat(v.price)))
             : 0,
           price_max: productData.variants?.length > 0 
-            ? Math.max(...productData.variants.map((v: any) => parseFloat(v.price)))
+            ? Math.max(...productData.variants.map((v: { price: string }) => parseFloat(v.price)))
             : 0,
           // Default values for missing fields
           origin: '',
@@ -83,6 +113,8 @@ export default function ProductDetail() {
           harvest_date: '',
           is_featured: false,
           category_id: '',
+          categories: productData.categories || [],
+          roastLevels: productData.roastLevels || []
         };
         
         setProduct(transformedProduct);
@@ -119,7 +151,7 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = () => {
-    if (!selectedVariant) {
+    if (!selectedVariant || !product) {
       toast.error('Please select a variant');
       return;
     }
@@ -129,8 +161,9 @@ export default function ProductDetail() {
       return;
     }
     
-    // TODO: Implement add to cart functionality
-    toast.success(`Added ${quantity} ${product?.name} to cart`);
+    addItem(product, selectedVariant, quantity);
+    toast.success(`Added ${quantity} ${product.name} to cart`);
+    openCart();
   };
 
   const handleShare = () => {
@@ -258,9 +291,16 @@ export default function ProductDetail() {
                 <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                 <span className="text-sm text-gray-600">4.8 (24 reviews)</span>
               </div>
-              <Badge variant="outline" className="text-xs">
-                {product.roast_level} roast
-              </Badge>
+              {/* Display actual roast levels from database */}
+              {product.roastLevels && product.roastLevels.length > 0 && (
+                <div className="flex gap-2">
+                  {product.roastLevels.map((roastLevel: { roast_level_id: string; roast_level_name: string }) => (
+                    <Badge key={roastLevel.roast_level_id} variant="outline" className="text-xs">
+                      {roastLevel.roast_level_name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -268,20 +308,20 @@ export default function ProductDetail() {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-3xl font-bold text-green-600">
-                {selectedVariant ? formatPrice(selectedVariant.price, product.currency) : 
-                 hasPriceRange ? formatPrice(product.price_min || 0, product.currency) + ' - ' + formatPrice(product.price_max || 0, product.currency) : 
-                 formatPrice(product.price_min || 0, product.currency)}
+                {selectedVariant ? formatPrice(selectedVariant.price, 'USD') : 
+                 hasPriceRange ? formatPrice(product.price_min || 0, 'USD') + ' - ' + formatPrice(product.price_max || 0, 'USD') : 
+                 formatPrice(product.price_min || 0, 'USD')}
               </span>
             </div>
             {hasPriceRange && !selectedVariant && (
               <p className="text-sm text-gray-600">
-                Starting from {formatPrice(product.price_min || 0, product.currency)}
+                Starting from {formatPrice(product.price_min || 0, 'USD')}
               </p>
             )}
             {selectedVariant?.compare_at_price && 
-             parseFloat(selectedVariant.compare_at_price) > parseFloat(selectedVariant.price) && (
+             selectedVariant.compare_at_price > selectedVariant.price && (
               <p className="text-sm text-gray-500 line-through">
-                {formatPrice(selectedVariant.compare_at_price, product.currency)}
+                {formatPrice(selectedVariant.compare_at_price, 'USD')}
               </p>
             )}
           </div>
@@ -289,10 +329,59 @@ export default function ProductDetail() {
           {/* Description */}
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-            <p className="text-gray-600 leading-relaxed">
-              {product.long_description || product.short_description || 'No description available.'}
-            </p>
+            <div className="text-gray-600 leading-relaxed">
+              {product.long_description ? (
+                <div 
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatDescription(product.long_description)
+                  }} 
+                />
+              ) : product.short_description ? (
+                <div 
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatDescription(product.short_description)
+                  }} 
+                />
+              ) : (
+                <p className="text-gray-500 italic">No description available.</p>
+              )}
+            </div>
           </div>
+
+          {/* Categories and Roast Levels */}
+          {(product.categories && product.categories.length > 0) || (product.roastLevels && product.roastLevels.length > 0) ? (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3">Product Details</h3>
+              <div className="space-y-3">
+                {product.categories && product.categories.length > 0 && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Categories:</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {product.categories.map((category: { category_id: string; category_name: string }) => (
+                        <Badge key={category.category_id} variant="secondary" className="text-xs">
+                          {category.category_name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {product.roastLevels && product.roastLevels.length > 0 && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Roast Levels:</span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {product.roastLevels.map((roastLevel: { roast_level_id: string; roast_level_name: string }) => (
+                        <Badge key={roastLevel.roast_level_id} variant="outline" className="text-xs">
+                          {roastLevel.roast_level_name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
 
           {/* Variants Selection */}
           {hasMultipleVariants && (
@@ -310,7 +399,7 @@ export default function ProductDetail() {
                           {variant.weight_gram ? `${variant.weight_gram}g` : 'Standard'}
                         </span>
                         <span className="ml-4 font-medium">
-                          {formatPrice(variant.price, product.currency)}
+                          {formatPrice(variant.price, 'USD')}
                         </span>
                       </div>
                     </SelectItem>

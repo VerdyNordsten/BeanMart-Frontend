@@ -14,7 +14,7 @@ interface ProductEditModalProps {
 }
 
 export function ProductEditModal({ productId, isOpen, onClose, onSuccess }: ProductEditModalProps) {
-  const [productData, setProductData] = useState<any>(null);
+  const [productData, setProductData] = useState<Record<string, unknown> | null>(null);
 
   // Fetch product data when modal opens
   const { data: product, isLoading, error } = useQuery({

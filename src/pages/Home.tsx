@@ -31,14 +31,28 @@ export default function Home() {
         const favorites = favoritesData.success && favoritesData.data ? favoritesData.data : [];
 
         // Transform API data to match frontend Product interface
-        const transformProduct = (apiProduct: any): Product => ({
+        interface ApiProduct {
+          id: string;
+          slug: string;
+          name: string;
+          short_description?: string;
+          long_description?: string;
+          base_price: string;
+          base_compare_at_price?: string;
+          is_active?: boolean;
+          created_at: string;
+          updated_at: string;
+          variants?: Array<Record<string, unknown>>;
+        }
+        
+        const transformProduct = (apiProduct: ApiProduct): Product => ({
           id: apiProduct.id,
           slug: apiProduct.slug,
           name: apiProduct.name,
           short_description: apiProduct.short_description || '',
           long_description: apiProduct.long_description || '',
           price_min: parseFloat(apiProduct.base_price) || 0,
-          price_max: parseFloat(apiProduct.base_compare_at_price) || parseFloat(apiProduct.base_price) || 0,
+          price_max: parseFloat(apiProduct.base_compare_at_price || apiProduct.base_price) || 0,
           origin: '',
           roast_level: 'medium' as const,
           tasting_notes: [],

@@ -42,9 +42,7 @@ export default function AdminLogin() {
     setIsLoading(true);
     
     try {
-      console.log('Attempting login with:', data);
       const response = await authApi.login({ email: data.email, password: data.password, isAdmin: true }); // isAdmin = true for admin panel
-      console.log('Login response:', response);
       
       // Handle the token field name difference
       const token = response.accessToken || response.token;

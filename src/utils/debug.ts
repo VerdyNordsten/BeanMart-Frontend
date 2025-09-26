@@ -1,7 +1,7 @@
 // Comprehensive debugging utility
 export class DebugLogger {
   private static instance: DebugLogger;
-  private logs: Array<{timestamp: string, level: string, category: string, message: string, data?: any}> = [];
+  private logs: Array<{timestamp: string, level: string, category: string, message: string, data?: unknown}> = [];
   private isEnabled: boolean = true;
 
   static getInstance(): DebugLogger {
@@ -16,7 +16,7 @@ export class DebugLogger {
     this.isEnabled = import.meta.env.DEV;
   }
 
-  private log(level: string, category: string, message: string, data?: any) {
+  private log(level: string, category: string, message: string, data?: unknown) {
     if (!this.isEnabled) return;
 
     const timestamp = new Date().toISOString();
@@ -56,41 +56,41 @@ export class DebugLogger {
   }
 
   // Public logging methods
-  error(category: string, message: string, data?: any) {
+  error(category: string, message: string, data?: unknown) {
     this.log('ERROR', category, message, data);
   }
 
-  warn(category: string, message: string, data?: any) {
+  warn(category: string, message: string, data?: unknown) {
     this.log('WARN', category, message, data);
   }
 
-  info(category: string, message: string, data?: any) {
+  info(category: string, message: string, data?: unknown) {
     this.log('INFO', category, message, data);
   }
 
-  success(category: string, message: string, data?: any) {
+  success(category: string, message: string, data?: unknown) {
     this.log('SUCCESS', category, message, data);
   }
 
-  debug(category: string, message: string, data?: any) {
+  debug(category: string, message: string, data?: unknown) {
     this.log('DEBUG', category, message, data);
   }
 
   // Specialized logging methods
-  formData(category: string, message: string, data: any) {
+  formData(category: string, message: string, data: unknown) {
     this.log('DEBUG', `FORM-${category}`, message, data);
   }
 
-  apiRequest(method: string, url: string, data?: any) {
+  apiRequest(method: string, url: string, data?: unknown) {
     this.log('INFO', 'API-REQUEST', `${method} ${url}`, data);
   }
 
-  apiResponse(status: number, url: string, data?: any) {
+  apiResponse(status: number, url: string, data?: unknown) {
     const level = status >= 400 ? 'ERROR' : status >= 300 ? 'WARN' : 'SUCCESS';
     this.log(level, 'API-RESPONSE', `${status} ${url}`, data);
   }
 
-  apiError(error: any, url: string) {
+  apiError(error: unknown, url: string) {
     this.log('ERROR', 'API-ERROR', `Error in ${url}`, {
       message: error.message,
       status: error.response?.status,
@@ -131,11 +131,11 @@ export class DebugLogger {
 export const debug = DebugLogger.getInstance();
 
 // Convenience functions
-export const logForm = (category: string, message: string, data: any) => debug.formData(category, message, data);
-export const logApi = (method: string, url: string, data?: any) => debug.apiRequest(method, url, data);
-export const logResponse = (status: number, url: string, data?: any) => debug.apiResponse(status, url, data);
-export const logError = (error: any, url: string) => debug.apiError(error, url);
-export const logSuccess = (category: string, message: string, data?: any) => debug.success(category, message, data);
-export const logInfo = (category: string, message: string, data?: any) => debug.info(category, message, data);
-export const logWarn = (category: string, message: string, data?: any) => debug.warn(category, message, data);
+export const logForm = (category: string, message: string, data: unknown) => debug.formData(category, message, data);
+export const logApi = (method: string, url: string, data?: unknown) => debug.apiRequest(method, url, data);
+export const logResponse = (status: number, url: string, data?: unknown) => debug.apiResponse(status, url, data);
+export const logError = (error: unknown, url: string) => debug.apiError(error, url);
+export const logSuccess = (category: string, message: string, data?: unknown) => debug.success(category, message, data);
+export const logInfo = (category: string, message: string, data?: unknown) => debug.info(category, message, data);
+export const logWarn = (category: string, message: string, data?: unknown) => debug.warn(category, message, data);
 

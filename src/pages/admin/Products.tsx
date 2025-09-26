@@ -21,18 +21,6 @@ export default function AdminProducts() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const itemsPerPage = 10;
 
-  // Check authentication
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-600">Please log in to access the admin panel.</p>
-        </div>
-      </div>
-    );
-  }
-
   // Fetch products
   const {
     data: productsResponse,
@@ -45,6 +33,7 @@ export default function AdminProducts() {
       const response = await productsApi.getAllProducts();
       return response;
     },
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // Delete product mutation
@@ -61,10 +50,11 @@ export default function AdminProducts() {
         description: 'Product deleted successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete product';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to delete product',
+        description: errorMessage,
         variant: 'destructive',
       });
     },
@@ -103,6 +93,18 @@ export default function AdminProducts() {
     setEditingProduct(null);
     setShowCreateForm(false);
   };
+
+  // Check authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600">Please log in to access the admin panel.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -282,6 +282,75 @@ export const categoriesApi = {
   },
 };
 
+// ===== ROAST LEVELS API =====
+export const roastLevelsApi = {
+  // Get all roast levels
+  getAllRoastLevels: async () => {
+    const response = await apiClient.get('/roast-levels');
+    return response.data;
+  },
+
+  // Get roast level by ID
+  getRoastLevel: async (id: string) => {
+    const response = await apiClient.get(`/roast-levels/${id}`);
+    return response.data;
+  },
+
+  // Get roast level by slug
+  getRoastLevelBySlug: async (slug: string) => {
+    const response = await apiClient.get(`/roast-levels/slug/${slug}`);
+    return response.data;
+  },
+
+  // Get products for roast level
+  getProductsForRoastLevel: async (id: string) => {
+    const response = await apiClient.get(`/roast-levels/${id}/products`);
+    return response.data;
+  },
+
+  // Create roast level (admin only)
+  createRoastLevel: async (data: {
+    slug: string;
+    name: string;
+  }) => {
+    const response = await apiClient.post('/roast-levels', data);
+    return response.data;
+  },
+
+  // Update roast level (admin only)
+  updateRoastLevel: async (id: string, data: {
+    slug?: string;
+    name?: string;
+  }) => {
+    const response = await apiClient.put(`/roast-levels/${id}`, data);
+    return response.data;
+  },
+
+  // Delete roast level (admin only)
+  deleteRoastLevel: async (id: string) => {
+    const response = await apiClient.delete(`/roast-levels/${id}`);
+    return response.data;
+  },
+};
+
+// ===== PRODUCT RELATIONS API =====
+export const productRelationsApi = {
+  // Update product categories and roast levels
+  updateProductRelations: async (productId: string, data: {
+    categories?: string[];
+    roastLevels?: string[];
+  }) => {
+    const response = await apiClient.put(`/product-relations/${productId}`, data);
+    return response.data;
+  },
+
+  // Get product relations
+  getProductRelations: async (productId: string) => {
+    const response = await apiClient.get(`/product-relations/${productId}`);
+    return response.data;
+  },
+};
+
 // ===== USERS API =====
 export const usersApi = {
   // Get all users (admin only)
@@ -316,8 +385,8 @@ export const usersApi = {
 // ===== USER ADDRESSES API =====
 export const userAddressesApi = {
   // Get user addresses
-  getUserAddresses: async (userId: string) => {
-    const response = await apiClient.get(`/user-addresses/user/${userId}`);
+  getUserAddresses: async () => {
+    const response = await apiClient.get('/user-addresses');
     return response.data;
   },
 
@@ -329,6 +398,22 @@ export const userAddressesApi = {
 
   // Create address
   createAddress: async (data: {
+    user_id: string;
+    label: string;
+    recipient_name: string;
+    recipient_phone: string;
+    address: string;
+    city: string;
+    province: string;
+    postal_code: string;
+    is_primary: boolean;
+  }) => {
+    const response = await apiClient.post('/user-addresses', data);
+    return response.data;
+  },
+
+  // Create address (alias)
+  createUserAddress: async (data: {
     user_id: string;
     label: string;
     recipient_name: string;
@@ -358,9 +443,36 @@ export const userAddressesApi = {
     return response.data;
   },
 
+  // Update address (alias)
+  updateUserAddress: async (id: string, data: {
+    label?: string;
+    recipient_name?: string;
+    recipient_phone?: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postal_code?: string;
+    is_primary?: boolean;
+  }) => {
+    const response = await apiClient.put(`/user-addresses/${id}`, data);
+    return response.data;
+  },
+
   // Delete address
   deleteAddress: async (id: string) => {
     const response = await apiClient.delete(`/user-addresses/${id}`);
+    return response.data;
+  },
+
+  // Delete address (alias)
+  deleteUserAddress: async (id: string) => {
+    const response = await apiClient.delete(`/user-addresses/${id}`);
+    return response.data;
+  },
+
+  // Set address as default
+  setUserAddressAsDefault: async (id: string) => {
+    const response = await apiClient.put(`/user-addresses/${id}/set-default`);
     return response.data;
   },
 };
@@ -368,14 +480,25 @@ export const userAddressesApi = {
 // ===== ORDERS API =====
 export const ordersApi = {
   // Get all orders (admin only)
-  getAllOrders: async () => {
-    const response = await apiClient.get('/orders');
+  getAllOrders: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/orders?${queryParams.toString()}`);
     return response.data;
   },
 
   // Get user orders
-  getUserOrders: async (userId: string) => {
-    const response = await apiClient.get(`/orders/user/${userId}`);
+  getUserOrders: async () => {
+    const response = await apiClient.get('/orders/my');
     return response.data;
   },
 
@@ -387,25 +510,35 @@ export const ordersApi = {
 
   // Create order
   createOrder: async (data: {
-    user_id: string;
-    address_id: string;
     items: Array<{
-      variant_id: string;
+      productVariantId: string;
       quantity: number;
-      price: number;
+      pricePerUnit: number;
+      totalPrice: number;
     }>;
-    total_amount: number;
-    shipping_cost: number;
+    shippingAddress?: Record<string, unknown>;
+    billingAddress?: Record<string, unknown>;
     notes?: string;
+    shippingCost?: number;
   }) => {
     const response = await apiClient.post('/orders', data);
+    return response.data;
+  },
+
+  // Update order (admin only)
+  updateOrder: async (id: string, data: {
+    status?: string;
+    shippingAddress?: Record<string, unknown>;
+    billingAddress?: Record<string, unknown>;
+    notes?: string;
+  }) => {
+    const response = await apiClient.put(`/orders/${id}`, data);
     return response.data;
   },
 
   // Update order status (admin only)
   updateOrderStatus: async (id: string, data: {
     status: string;
-    tracking_number?: string;
   }) => {
     const response = await apiClient.put(`/orders/${id}/status`, data);
     return response.data;

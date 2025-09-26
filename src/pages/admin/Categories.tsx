@@ -17,18 +17,6 @@ export default function AdminCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Check authentication
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-600">Please log in to access the admin panel.</p>
-        </div>
-      </div>
-    );
-  }
-
   // Fetch categories
   const {
     data: categoriesResponse,
@@ -41,6 +29,7 @@ export default function AdminCategories() {
       const response = await categoriesApi.getAllCategories();
       return response;
     },
+    enabled: isAuthenticated, // Only run query if authenticated
   });
 
   // Delete category mutation
@@ -55,10 +44,11 @@ export default function AdminCategories() {
         description: 'Category deleted successfully',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete category';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to delete category',
+        description: errorMessage,
         variant: 'destructive',
       });
     },
@@ -93,6 +83,18 @@ export default function AdminCategories() {
     setEditingCategory(null);
     setShowCreateForm(false);
   };
+
+  // Check authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600">Please log in to access the admin panel.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

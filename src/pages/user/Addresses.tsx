@@ -59,7 +59,7 @@ export default function UserAddresses() {
     try {
       setLoading(true);
       setError(null);
-      const response = await userAddressesApi.getUserAddresses(user!.id);
+      const response = await userAddressesApi.getUserAddresses();
       
       if (response.success) {
         setAddresses(response.data || []);
@@ -91,7 +91,7 @@ export default function UserAddresses() {
         throw new Error("User not authenticated");
       }
       
-      const response = await userAddressesApi.setUserAddressAsDefault(id, user.id);
+      const response = await userAddressesApi.setUserAddressAsDefault(id);
       
       if (response.success) {
         // Update the addresses state to reflect the change
@@ -256,7 +256,10 @@ export default function UserAddresses() {
         addressData.address_line2 = newAddress.address_line2.trim();
       }
 
-      const response = await userAddressesApi.createUserAddress(user.id, addressData);
+      const response = await userAddressesApi.createUserAddress({
+        ...addressData,
+        user_id: user.id
+      });
       
       if (response.success && response.data) {
         // Add the new address to the list

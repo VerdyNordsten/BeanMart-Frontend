@@ -5,9 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { Cart } from "@/components/cart/Cart";
 import Home from "./pages/Home";
 import ProductPage from "./pages/Product";
 import ProductDetail from "./pages/ProductDetail";
+import Checkout from "./pages/Checkout";
 import Story from "./pages/Story";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
@@ -19,6 +21,7 @@ import { UserLayout } from "@/components/user/UserLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminCategories from "./pages/admin/Categories";
+import AdminRoastLevels from "./pages/admin/RoastLevels";
 import AdminOrders from "./pages/admin/Orders";
 import UserDashboard from "./pages/user/Dashboard";
 import UserOrders from "./pages/user/Orders";
@@ -41,6 +44,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<ProductPage />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/story" element={<Story />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<UserLogin />} />
@@ -57,6 +61,7 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="categories" element={<AdminCategories />} />
+                <Route path="roast-levels" element={<AdminRoastLevels />} />
                 <Route path="orders" element={<AdminOrders />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -64,6 +69,7 @@ const App = () => (
             </Routes>
           </main>
           <Footer />
+          <Cart />
         </div>
       </BrowserRouter>
     </TooltipProvider>

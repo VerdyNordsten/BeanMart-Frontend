@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { productsApi, productVariantsApi, variantImagesApi } from '@/lib/api';
+import { productsApi, productVariantsApi, variantImagesApi, categoriesApi, roastLevelsApi, productRelationsApi } from '@/lib/api';
 import { ImageUpload } from './ImageUpload';
-import type { Product, ProductFormData } from '@/types/product';
+import type { Product, ProductFormData, Category, RoastLevel } from '@/types/product';
 
 // Validation schema
 const productSchema = z.object({
@@ -25,6 +25,8 @@ const productSchema = z.object({
     currency: z.string().min(1, 'Currency is required'),
     is_active: z.boolean(),
   }),
+  categories: z.array(z.string()).optional(),
+  roastLevels: z.array(z.string()).optional(),
   variants: z.array(z.object({
     id: z.string().optional(),
     price: z.number().min(0, 'Price must be positive'),
@@ -53,7 +55,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   const { toast } = useToast();
   const isEditing = !!product;
 
-  const form = useForm<any>({
+  const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       product: {
@@ -64,6 +66,8 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         currency: 'USD',
         is_active: true,
       },
+      categories: [],
+      roastLevels: [],
       variants: [{
         price: 0,
         compare_at_price: 0,
@@ -81,6 +85,20 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   });
 
   const watchedName = form.watch('product.name');
+
+  // Fetch categories and roast levels
+  const { data: categoriesResponse } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAllCategories(),
+  });
+
+  const { data: roastLevelsResponse } = useQuery({
+    queryKey: ['roast-levels'],
+    queryFn: () => roastLevelsApi.getAllRoastLevels(),
+  });
+
+  const categories = categoriesResponse?.data || [];
+  const roastLevels = roastLevelsResponse?.data || [];
 
   // Generate slug from name
   useEffect(() => {
@@ -107,6 +125,8 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           currency: product.currency,
           is_active: product.is_active,
         },
+        categories: product.categories?.map((cat: { category_id?: string; id?: string }) => cat.category_id || cat.id) || [],
+        roastLevels: product.roastLevels?.map((roast: { roast_level_id?: string; id?: string }) => roast.roast_level_id || roast.id) || [],
         variants: product.variants?.map(variant => ({
           id: variant.id,
           price: Number(variant.price),
@@ -175,6 +195,14 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         }
       }
 
+      // Save product relations (categories and roast levels)
+      if (data.categories && data.categories.length > 0 || data.roastLevels && data.roastLevels.length > 0) {
+        await productRelationsApi.updateProductRelations(productId, {
+          categories: data.categories || [],
+          roastLevels: data.roastLevels || [],
+        });
+      }
+
       return productResponse.data;
     },
     onSuccess: () => {
@@ -184,10 +212,10 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
         toast({
         title: 'Error',
-        description: error.message || 'Failed to create product',
+        description: error instanceof Error ? error.message : 'Failed to create product',
         variant: 'destructive',
       });
     },
@@ -216,7 +244,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         .map(variant => variant.id);
         
       const variantsToDelete = currentVariants.filter(
-        (currentVariant: any) => !updatedVariantIds.includes(currentVariant.id)
+        (currentVariant: { id: string }) => !updatedVariantIds.includes(currentVariant.id)
       );
 
       // Delete removed variants
@@ -238,7 +266,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
 
           // Get current images for this variant to compare with new ones
           const currentVariant = currentVariants.find(
-            (v: any) => v.id === variantData.id
+            (v: { id: string; images?: Array<{ id: string }> }) => v.id === variantData.id
           );
           const currentImages = currentVariant?.images || [];
 
@@ -248,7 +276,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             .map(img => img.id);
             
           const imagesToDelete = currentImages.filter(
-            (img: any) => !updatedImageIds.includes(img.id)
+            (img: { id: string }) => !updatedImageIds.includes(img.id)
           );
 
           // Delete images that are no longer needed
@@ -306,6 +334,12 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         }
       }
 
+      // Update product relations (categories and roast levels)
+      await productRelationsApi.updateProductRelations(product.id, {
+        categories: data.categories || [],
+        roastLevels: data.roastLevels || [],
+      });
+
       return { success: true };
     },
     onSuccess: () => {
@@ -315,10 +349,10 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update product',
+        description: error instanceof Error ? error.message : 'Failed to update product',
         variant: 'destructive',
       });
     },
@@ -387,9 +421,6 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                 {...form.register('product.slug')}
                 placeholder="product-slug"
               />
-              {form.formState.errors.product?.slug && (
-                <p className="text-sm text-red-500">{(form.formState.errors.product.slug as any)?.message}</p>
-              )}
             </div>
             <div>
               <Label htmlFor="product.name">Product Name</Label>
@@ -398,9 +429,6 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                 {...form.register('product.name')}
                 placeholder="Product name"
               />
-              {form.formState.errors.product?.name && (
-                <p className="text-sm text-red-500">{(form.formState.errors.product.name as any)?.message}</p>
-              )}
             </div>
           </div>
 
@@ -419,9 +447,12 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             <Textarea
               id="product.long_description"
               {...form.register('product.long_description')}
-              placeholder="Detailed product description"
-              rows={5}
+              placeholder="Detailed product description&#10;&#10;Supports formatting:&#10;**Bold text** for bold&#10;*Italic text* for italic&#10;`Code` for inline code&#10;- Bullet points&#10;1. Numbered lists"
+              rows={6}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Supports basic formatting: **bold**, *italic*, `code`, bullet points (-), and numbered lists (1.)
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -448,6 +479,104 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                 onCheckedChange={(checked) => form.setValue('product.is_active', checked)}
               />
               <Label htmlFor="product.is_active">Active</Label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Categories and Roast Levels */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Categories & Roast Levels</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="categories">Categories</Label>
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  const currentCategories = form.getValues('categories') || [];
+                  if (!currentCategories.includes(value)) {
+                    form.setValue('categories', [...currentCategories, value]);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category: Category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(form.watch('categories') || []).map((categoryId: string) => {
+                  const category = categories.find((cat: Category) => cat.id === categoryId);
+                  return (
+                    <div key={categoryId} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                      {category?.name}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentCategories = form.getValues('categories') || [];
+                          form.setValue('categories', currentCategories.filter(id => id !== categoryId));
+                        }}
+                        className="ml-1 hover:text-blue-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="roastLevels">Roast Levels</Label>
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  const currentRoastLevels = form.getValues('roastLevels') || [];
+                  if (!currentRoastLevels.includes(value)) {
+                    form.setValue('roastLevels', [...currentRoastLevels, value]);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select roast levels" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roastLevels.map((roastLevel: RoastLevel) => (
+                    <SelectItem key={roastLevel.id} value={roastLevel.id}>
+                      {roastLevel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(form.watch('roastLevels') || []).map((roastLevelId: string) => {
+                  const roastLevel = roastLevels.find((roast: RoastLevel) => roast.id === roastLevelId);
+                  return (
+                    <div key={roastLevelId} className="flex items-center gap-1 bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">
+                      {roastLevel?.name}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentRoastLevels = form.getValues('roastLevels') || [];
+                          form.setValue('roastLevels', currentRoastLevels.filter(id => id !== roastLevelId));
+                        }}
+                        className="ml-1 hover:text-orange-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </CardContent>

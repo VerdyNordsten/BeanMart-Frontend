@@ -36,7 +36,7 @@ export default function AdminDashboard() {
 
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['admin-orders', dateRange],
-    queryFn: () => ordersApi.getOrders({ limit: 1000 }), // Get all orders for aggregation
+    queryFn: () => ordersApi.getAllOrders({ limit: 1000 }), // Get all orders for aggregation
   });
 
   // Update URL when date range changes
@@ -48,12 +48,12 @@ export default function AdminDashboard() {
 
   // Calculate KPIs
   const calculateKPIs = () => {
-    if (!ordersData?.orders) return null;
+    if (!ordersData?.data?.orders) return null;
 
     const now = new Date();
     const daysAgo = new Date(now.getTime() - parseInt(dateRange) * 24 * 60 * 60 * 1000);
     
-    const filteredOrders = ordersData.orders.filter((order: unknown) => {
+    const filteredOrders = ordersData.data.orders.filter((order: unknown) => {
       const orderData = order as { created_at: string };
       return new Date(orderData.created_at) >= daysAgo;
     });

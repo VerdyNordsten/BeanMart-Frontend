@@ -78,10 +78,10 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create category',
+        description: error instanceof Error ? error.message : 'Failed to create category',
         variant: 'destructive',
       });
     },
@@ -106,10 +106,10 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update category',
+        description: error instanceof Error ? error.message : 'Failed to update category',
         variant: 'destructive',
       });
     },
