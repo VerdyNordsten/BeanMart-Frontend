@@ -3,7 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Product } from '@/types/product';
-import { ShoppingCart, Star, Package, DollarSign } from 'lucide-react';
+import { ShoppingCart, Star, Package } from 'lucide-react';
+import { formatPrice, formatPriceRange, getCurrencySymbol } from '@/utils/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -23,8 +24,10 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
   const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => parseFloat(v.price))) : product.price_max;
   const hasPriceRange = minPrice !== maxPrice;
   
-  // Format price display
-  const priceDisplay = hasPriceRange ? `$${minPrice} - $${maxPrice}` : `$${minPrice}`;
+  // Format price display using currency utility
+  const priceDisplay = hasPriceRange ? 
+    formatPriceRange(minPrice, maxPrice, product.currency) : 
+    formatPrice(minPrice, product.currency);
   
   // Get total stock
   const totalStock = activeVariants.reduce((sum, variant) => sum + variant.stock, 0);
@@ -87,13 +90,14 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
         {/* Price Display */}
         <div className="mb-3">
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-green-600" />
             <span className="font-semibold text-coffee-dark text-lg">
               {priceDisplay}
             </span>
           </div>
           {hasPriceRange && (
-            <p className="text-xs text-muted-foreground">Starting from ${minPrice}</p>
+            <p className="text-xs text-muted-foreground">
+              Starting from {formatPrice(minPrice, product.currency)}
+            </p>
           )}
         </div>
 
@@ -124,7 +128,7 @@ export function ProductCard({ product, showAddToCart = true }: ProductCardProps)
                   <span className="text-muted-foreground">
                     {variant.weight_gram ? `${variant.weight_gram}g` : 'Standard'}
                   </span>
-                  <span className="font-medium">${parseFloat(variant.price)}</span>
+                  <span className="font-medium">{formatPrice(variant.price, product.currency)}</span>
                 </div>
               ))}
             </div>

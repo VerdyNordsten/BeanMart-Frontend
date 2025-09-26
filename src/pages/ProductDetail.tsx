@@ -8,12 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { productsApi } from '@/lib/api';
+import { formatPrice, getCurrencySymbol } from '@/utils/currency';
 import { Product, ProductVariant } from '@/types/product';
 import { 
   ShoppingCart, 
   Star, 
   Package, 
-  DollarSign, 
   Weight, 
   Truck, 
   Shield, 
@@ -267,20 +267,21 @@ export default function ProductDetail() {
           {/* Price */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
               <span className="text-3xl font-bold text-green-600">
-                {selectedVariant ? '$' + parseFloat(selectedVariant.price).toFixed(2) : 
-                 hasPriceRange ? '$' + (product.price_min || 0).toFixed(2) + ' - $' + (product.price_max || 0).toFixed(2) : 
-                 '$' + (product.price_min || 0).toFixed(2)}
+                {selectedVariant ? formatPrice(selectedVariant.price, product.currency) : 
+                 hasPriceRange ? formatPrice(product.price_min || 0, product.currency) + ' - ' + formatPrice(product.price_max || 0, product.currency) : 
+                 formatPrice(product.price_min || 0, product.currency)}
               </span>
             </div>
             {hasPriceRange && !selectedVariant && (
-              <p className="text-sm text-gray-600">Starting from ${(product.price_min || 0).toFixed(2)}</p>
+              <p className="text-sm text-gray-600">
+                Starting from {formatPrice(product.price_min || 0, product.currency)}
+              </p>
             )}
             {selectedVariant?.compare_at_price && 
              parseFloat(selectedVariant.compare_at_price) > parseFloat(selectedVariant.price) && (
               <p className="text-sm text-gray-500 line-through">
-                ${parseFloat(selectedVariant.compare_at_price).toFixed(2)}
+                {formatPrice(selectedVariant.compare_at_price, product.currency)}
               </p>
             )}
           </div>
@@ -309,7 +310,7 @@ export default function ProductDetail() {
                           {variant.weight_gram ? `${variant.weight_gram}g` : 'Standard'}
                         </span>
                         <span className="ml-4 font-medium">
-                          ${parseFloat(variant.price).toFixed(2)}
+                          {formatPrice(variant.price, product.currency)}
                         </span>
                       </div>
                     </SelectItem>

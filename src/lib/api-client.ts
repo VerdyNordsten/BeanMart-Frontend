@@ -5,11 +5,55 @@ import { debug, logApi, logResponse, logError } from '@/utils/debug';
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
-  timeout: 10000,
+  timeout: 10000, // Keep default timeout low for normal requests
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Create special instance for file uploads with longer timeout
+export const uploadApiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
+  timeout: 120000, // 2 minutes timeout for upload operations
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Apply the same interceptors to uploadApiClient
+uploadApiClient.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+uploadApiClient.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      const { logout } = useAuthStore.getState();
+      logout();
+
+      // Redirect to login if not already there
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/admin')) {
+          window.location.href = '/admin/login';
+        } else {
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(

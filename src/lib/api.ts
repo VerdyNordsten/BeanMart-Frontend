@@ -1,4 +1,4 @@
-import { apiClient } from './api-client';
+import { apiClient, uploadApiClient } from './api-client';
 
 // ===== AUTH API =====
 export const authApi = {
@@ -180,7 +180,7 @@ export const productVariantsApi = {
 export const variantImagesApi = {
   // Upload single image (admin only)
   uploadImage: async (formData: FormData) => {
-    const response = await apiClient.post('/variant-images', formData, {
+    const response = await uploadApiClient.post('/variant-images', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -190,7 +190,7 @@ export const variantImagesApi = {
 
   // Upload multiple images (admin only)
   uploadMultipleImages: async (formData: FormData) => {
-    const response = await apiClient.post('/variant-images/multiple', formData, {
+    const response = await uploadApiClient.post('/variant-images/multiple', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -200,7 +200,7 @@ export const variantImagesApi = {
 
   // Advanced upload (file, URL, or base64) (admin only)
   uploadAdvanced: async (formData: FormData) => {
-    const response = await apiClient.post('/variant-images/upload-advanced', formData, {
+    const response = await uploadApiClient.post('/variant-images/upload-advanced', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -210,7 +210,7 @@ export const variantImagesApi = {
 
   // Advanced upload multiple (admin only)
   uploadAdvancedMultiple: async (formData: FormData) => {
-    const response = await apiClient.post('/variant-images/upload-advanced-multiple', formData, {
+    const response = await uploadApiClient.post('/variant-images/upload-advanced-multiple', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

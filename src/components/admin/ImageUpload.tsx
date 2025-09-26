@@ -121,11 +121,23 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
       return;
     }
 
+    // Validate URL format
+    try {
+      new URL(urlInput.trim());
+    } catch {
+      toast({
+        title: 'Invalid URL',
+        description: 'Please enter a valid image URL',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (variantId) {
-      // Edit mode - upload immediately
+      // Edit mode - upload immediately via backend
       try {
         const formData = new FormData();
-        formData.append('url', urlInput);
+        formData.append('url', urlInput.trim());
         formData.append('variant_id', variantId);
         formData.append('position', (images.length + 1).toString());
 
@@ -134,14 +146,14 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
         if (response.success && response.data) {
           const newImage = {
             id: response.data.id,
-            url: response.data.url,
+            url: response.data.url, // This will be the local asset URL, not the source URL
             position: response.data.position,
           };
           onImagesChange([...images, newImage]);
           setUrlInput('');
           toast({
             title: 'Success',
-            description: 'Image uploaded successfully',
+            description: 'Image downloaded and uploaded successfully',
           });
         } else {
           throw new Error(response.message || 'Upload failed');
@@ -149,27 +161,99 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
       } catch (error: any) {
         toast({
           title: 'Upload failed',
-          description: error.message || 'Failed to upload image',
+          description: error.message || 'Failed to download and upload image',
           variant: 'destructive',
         });
       }
     } else {
-      // Create mode - store locally
+      // Create mode - create formData for later processing via backend
       const newImage = {
-        url: urlInput,
+        url: urlInput.trim(), // Store the URL for processing later
         position: images.length + 1,
       };
       onImagesChange([...images, newImage]);
       setUrlInput('');
       toast({
         title: 'Success',
-        description: 'Image added (will be uploaded when product is saved)',
+        description: 'Image URL added (will be downloaded and converted when product is saved)',
       });
     }
   };
 
   const handlePasteImage = async (event: React.ClipboardEvent) => {
     const items = event.clipboardData?.items;
+    const text = event.clipboardData?.getData('text');
+    
+    // Check if pasted text is a URL
+    if (text) {
+      try {
+        const url = new URL(text);
+        // Validate if it looks like an image URL (common image extensions)
+        const pathname = url.pathname.toLowerCase();
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+        const hasImageExtension = imageExtensions.some(ext => pathname.endsWith(ext));
+        
+        // Also check common image URL patterns
+        const hasImagePattern = url.pathname.includes('image') || 
+                              url.pathname.includes('img') ||
+                              url.hostname.includes('cdn') ||
+                              url.hostname.includes('images');
+        
+        if (hasImageExtension || hasImagePattern) {
+          event.preventDefault();
+          // Treat this as URL upload
+          const pastedUrl = text;
+          
+          if (variantId) {
+            // Edit mode - upload immediately via backend
+            try {
+              const formData = new FormData();
+              formData.append('url', pastedUrl);
+              formData.append('variant_id', variantId);
+              formData.append('position', (images.length + 1).toString());
+
+              const response = await variantImagesApi.uploadAdvanced(formData);
+              
+              if (response.success && response.data) {
+                const newImage = {
+                  id: response.data.id,
+                  url: response.data.url, // This will be the local asset URL, not the source URL
+                  position: response.data.position,
+                };
+                onImagesChange([...images, newImage]);
+                toast({
+                  title: 'Success',
+                  description: 'Image URL pasted, downloaded and uploaded successfully',
+                });
+              } else {
+                throw new Error(response.message || 'Upload failed');
+              }
+            } catch (error: any) {
+              toast({
+                title: 'Upload failed',
+                description: error.message || 'Failed to download and upload pasted URL',
+                variant: 'destructive',
+              });
+            }
+          } else {
+            // Create mode - store the URL for processing later
+            const newImage = {
+              url: pastedUrl,
+              position: images.length + 1,
+            };
+            onImagesChange([...images, newImage]);
+            toast({
+              title: 'Success',
+              description: 'Image URL pasted (will be downloaded and converted when product is saved)',
+            });
+          }
+          return;
+        }
+      } catch {
+        // Text is not a valid URL, continue with image handling
+      }
+    }
+
     if (!items) return;
 
     for (let i = 0; i < items.length; i++) {
@@ -337,7 +421,7 @@ export function ImageUpload({ images, onImagesChange, variantId }: ImageUploadPr
               }
             }}
           >
-            <p className="text-gray-500">Click here and paste an image (Ctrl+V)</p>
+            <p className="text-gray-500">Click here and paste an image (Ctrl+V)<br />Or paste an image URL</p>
           </div>
         </TabsContent>
       </Tabs>
