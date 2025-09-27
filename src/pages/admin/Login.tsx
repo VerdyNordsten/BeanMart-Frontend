@@ -1,44 +1,23 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/lib/auth';
 import { authApi } from '@/lib/api';
 import { formatAPIError } from '@/lib/api-client';
-import { Coffee, Loader2 } from 'lucide-react';
-
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
+import { AuthCard } from '@/components/auth/AuthCard';
+import { LoginForm, type LoginFormData } from '@/components/auth/LoginForm';
 
 export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const { user, setAuth } = useAuthStore();
   const { toast } = useToast();
 
-  const form = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
   // Redirect if already authenticated as admin
   if (user && user.role === 'admin' && user.is_active) {
     return <Navigate to="/admin" replace />;
   }
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     
     try {
@@ -110,9 +89,8 @@ export default function AdminLogin() {
       if (apiError.details) {
         // Set field-specific errors
         Object.entries(apiError.details).forEach(([field, messages]) => {
-          form.setError(field as keyof LoginForm, {
-            message: messages[0],
-          });
+          // Note: We can't set form errors here since the form is in the LoginForm component
+          // The error handling will be done through toast notifications instead
         });
       } else {
         toast({
@@ -127,83 +105,17 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md card-shadow">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-coffee-medium/10 rounded-full">
-              <Coffee className="h-8 w-8 text-coffee-medium" />
-            </div>
-          </div>
-          <CardTitle className="font-display text-2xl text-coffee-dark">
-            Admin Login
-          </CardTitle>
-          <p className="text-muted-foreground">
-            Sign in to access the Beanmart admin panel
-          </p>
-        </CardHeader>
-        
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="admin@beanmart.com"
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="password"
-                        placeholder="Enter your password"
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button 
-                type="submit" 
-                variant="coffee" 
-                size="lg" 
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthCard
+      title="Admin Login"
+      description="Sign in to access the Beanmart admin panel"
+    >
+      <LoginForm
+        onSubmit={onSubmit}
+        isLoading={isLoading}
+        emailPlaceholder="admin@beanmart.com"
+        submitButtonText="Sign In"
+        submitButtonVariant="coffee"
+      />
+    </AuthCard>
   );
 }

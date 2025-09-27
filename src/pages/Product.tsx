@@ -1,19 +1,11 @@
-import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SEO, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { ProductGrid } from '@/components/ui/ProductGrid';
-import { Pagination, PaginationInfo } from '@/components/ui/Pagination';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
 import { categoriesApi, roastLevelsApi } from '@/lib/api';
-import { Category, RoastLevel } from '@/types/product';
-import { Search, Filter, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useCachedProductsWithPagination } from '@/hooks/useCachedProductsWithPagination';
+import { ProductPageHeader } from '@/components/products/ProductPageHeader';
+import { ProductFilters } from '@/components/products/ProductFilters';
+import { ProductResults } from '@/components/products/ProductResults';
 
 export default function ProductPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -159,223 +151,37 @@ export default function ProductPage() {
         type="website"
         structuredData={breadcrumbStructuredData}
       />
-      {/* Header */}
-      <section className="bg-muted/30 py-12">
-        <div className="container max-w-screen-2xl">
-          <h1 className="font-display text-4xl font-bold text-coffee-dark mb-4">
-            Coffee Products
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Discover our complete collection of premium coffee beans
-          </p>
-        </div>
-      </section>
+      
+      <ProductPageHeader />
 
       <div className="container max-w-screen-2xl py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-display text-lg font-semibold text-coffee-dark">
-                  Filters
-                  </h2>
-                {activeFiltersCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                      className="text-muted-foreground hover:text-coffee-dark"
-                  >
-                      <X className="h-4 w-4 mr-1" />
-                      Clear ({activeFiltersCount})
-                  </Button>
-                )}
-              </div>
-
-                <div className="space-y-6">
-              {/* Search */}
-                  <form onSubmit={handleSearch} className="space-y-2">
-                <label className="text-sm font-medium text-coffee-dark">
-                  Search
-                </label>
-                    <div className="flex gap-2">
-                  <Input
-                        name="search"
-                        placeholder="Search products..."
-                        defaultValue={searchQuery}
-                    className="flex-1"
-                  />
-                      <Button type="submit" size="sm" variant="coffee-outline">
-                    <Search className="h-4 w-4" />
-                  </Button>
-                    </div>
-                </form>
-
-              {/* Category */}
-                  <div className="space-y-2">
-                <label className="text-sm font-medium text-coffee-dark">
-                  Category
-                </label>
-                    <Select value={categoryFilterSlug} onValueChange={(value) => {
-                      if (value === 'all') {
-                        updateFilters('category', '');
-                      } else {
-                        const category = categories.find(cat => cat.slug === value);
-                        updateFilters('category', category?.id || '');
-                      }
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All categories</SelectItem>
-                    {categories.map((category: Category) => (
-                          <SelectItem key={category.id} value={category.slug}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Roast Level */}
-                  <div className="space-y-2">
-                <label className="text-sm font-medium text-coffee-dark">
-                  Roast Level
-                </label>
-                    <Select value={roastFilterSlug} onValueChange={(value) => {
-                      if (value === 'all') {
-                        updateFilters('roast', '');
-                      } else {
-                        const roastLevel = roastLevels.find(rl => rl.slug === value);
-                        updateFilters('roast', roastLevel?.id || '');
-                      }
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All roasts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All roasts</SelectItem>
-                    {roastLevels.map((roastLevel: RoastLevel) => (
-                          <SelectItem key={roastLevel.id} value={roastLevel.slug}>
-                        {roastLevel.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Weight Range */}
-                  <div className="space-y-2">
-                <label className="text-sm font-medium text-coffee-dark">
-                  Weight Range
-                </label>
-                <Select value={weightFilter} onValueChange={(value) => {
-                      updateFilters('weight', value);
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All weights" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All weights</SelectItem>
-                        <SelectItem value="100-250">100g - 250g</SelectItem>
-                    <SelectItem value="250-500">250g - 500g</SelectItem>
-                    <SelectItem value="500-1000">500g - 1kg</SelectItem>
-                        <SelectItem value="1000-2000">1kg - 2kg</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-              </CardContent>
-            </Card>
+            <ProductFilters
+              searchQuery={searchQuery}
+              categoryFilterSlug={categoryFilterSlug}
+              roastFilterSlug={roastFilterSlug}
+              weightFilter={weightFilter}
+              activeFiltersCount={activeFiltersCount}
+              categories={categories}
+              roastLevels={roastLevels}
+              onSearch={handleSearch}
+              onFilterChange={updateFilters}
+              onClearFilters={clearFilters}
+            />
           </div>
 
-          {/* Products Grid */}
-          <div className="lg:col-span-3">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <h2 className="font-display text-xl font-semibold text-coffee-dark">
-                  Products
-                </h2>
-            {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="bg-coffee-medium/10 text-coffee-medium">
-                    {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} applied
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {productsData?.pagination.total || 0} products
-                </span>
-              </div>
-            </div>
-
-            {/* Loading State */}
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <Skeleton className="aspect-square w-full" />
-                    <CardContent className="p-3 space-y-3">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-6 w-1/2" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-5 w-16" />
-                        <Skeleton className="h-5 w-20" />
-                      </div>
-                      <Skeleton className="h-8 w-full" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  Failed to load products. Please try again.
-                </div>
-                <Button onClick={() => refetch()} variant="coffee-outline">
-                  Retry
-                </Button>
-              </div>
-            ) : productsData?.products.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  No products found matching your criteria.
-                </div>
-                <Button onClick={clearFilters} variant="coffee-outline">
-                  Clear Filters
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Products Grid */}
-                <ProductGrid products={productsData?.products || []} />
-                
-                {/* Pagination */}
-                {productsData && productsData.pagination.total_pages > 1 && (
-                  <div className="mt-12 space-y-4">
-                    <PaginationInfo
-                      currentPage={productsData.pagination.page}
-                      totalPages={productsData.pagination.total_pages}
-                      totalItems={productsData.pagination.total}
-                      itemsPerPage={productsData.pagination.limit}
-                      className="text-center"
-                    />
-                    <Pagination
-                      currentPage={productsData.pagination.page}
-                      totalPages={productsData.pagination.total_pages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          {/* Products Results */}
+          <ProductResults
+            loading={loading}
+            error={error}
+            productsData={productsData}
+            activeFiltersCount={activeFiltersCount}
+            onRetry={() => refetch()}
+            onClearFilters={clearFilters}
+            onPageChange={handlePageChange}
+          />
         </div>
       </div>
     </div>
