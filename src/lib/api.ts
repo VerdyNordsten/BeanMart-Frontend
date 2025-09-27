@@ -73,6 +73,18 @@ export const productsApi = {
     return response.data;
   },
 
+  // Get products with optional parameters
+  getProducts: async (params?: { limit?: number; offset?: number; category?: string; roast_level?: string }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.roast_level) queryParams.append('roast_level', params.roast_level);
+    
+    const response = await apiClient.get(`/products?${queryParams.toString()}`);
+    return response.data;
+  },
+
   // Get active products with variants and images
   getActiveProducts: async () => {
     const response = await apiClient.get('/products/active');

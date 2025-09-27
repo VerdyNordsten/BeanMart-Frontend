@@ -98,3 +98,4 @@ export const getCurrencySymbol = (currency: string = 'USD'): string => {
   const config = CURRENCY_CONFIGS[currency] || CURRENCY_CONFIGS.USD;
   return config.symbol;
 };
+

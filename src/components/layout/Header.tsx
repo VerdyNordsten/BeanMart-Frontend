@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
   Menu, 
@@ -34,7 +35,10 @@ const navigation = [
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const { getTotalItems, openCart } = useCartStore();
 
@@ -42,6 +46,48 @@ export function Header() {
     logout();
     window.location.href = "/";
   };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setShowSearch(false);
+      setIsOpen(false); // Close mobile menu after search
+    }
+  };
+
+  const handleSearchClick = () => {
+    setShowSearch(!showSearch);
+    if (!showSearch) {
+      // Focus on search input when opened
+      setTimeout(() => {
+        const searchInput = document.getElementById('header-search-input');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 100);
+    }
+  };
+
+  // Keyboard shortcut for search (Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+        setTimeout(() => {
+          const searchInput = document.getElementById('header-search-input');
+          if (searchInput) {
+            searchInput.focus();
+          }
+        }, 100);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -73,10 +119,45 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Search</span>
-          </Button>
+          {/* Search */}
+          <div className="relative">
+            {showSearch ? (
+              <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                <Input
+                  id="header-search-input"
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 h-9"
+                  autoFocus
+                />
+                <Button type="submit" size="sm" className="h-9">
+                  <Search className="h-4 w-4" />
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9"
+                  onClick={() => setShowSearch(false)}
+                >
+                  ×
+                </Button>
+              </form>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hidden sm:flex"
+                onClick={handleSearchClick}
+                title="Search products (Ctrl+K)"
+              >
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Search products (Ctrl+K)</span>
+              </Button>
+            )}
+          </div>
           
           <Button 
             variant="ghost" 
@@ -178,6 +259,20 @@ export function Header() {
                     Beanmart
                   </span>
                 </Link>
+                
+                {/* Mobile Search */}
+                <form onSubmit={handleSearch} className="flex items-center space-x-2 pb-4 border-b">
+                  <Input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="submit" size="sm">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </form>
                 {navigation.map((item) => (
                   <Link
                     key={item.name}

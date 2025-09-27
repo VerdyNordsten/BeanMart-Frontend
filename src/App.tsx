@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
+import { SEODebug } from '@/components/SEODebug';
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Cart } from "@/components/cart/Cart";
@@ -12,6 +14,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Story from "./pages/Story";
 import Contact from "./pages/Contact";
+import BrewGuides from "./pages/BrewGuides";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/Login";
 import UserLogin from "./pages/user/Login";
@@ -29,17 +32,29 @@ import UserProfile from "./pages/user/Profile";
 import UserAddresses from "./pages/user/Addresses";
 import UserPaymentMethods from "./pages/user/PaymentMethods";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 60 * 1000, // 30 minutes - data stays fresh longer
+      cacheTime: 60 * 60 * 1000, // 60 minutes - keep in cache for 1 hour
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnMount: false, // Don't refetch when component mounts if data is fresh
+      refetchOnReconnect: false, // Don't refetch when reconnecting
+      retry: 1, // Only retry once on failure
+    },
+  },
+});
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1">
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<ProductPage />} />
@@ -47,6 +62,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/story" element={<Story />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/brew-guides" element={<BrewGuides />} />
               <Route path="/login" element={<UserLogin />} />
               <Route path="/register" element={<UserRegister />} />
               <Route path="/user" element={<UserLayout />}>
@@ -70,10 +86,12 @@ const App = () => (
           </main>
           <Footer />
           <Cart />
+          <SEODebug />
         </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

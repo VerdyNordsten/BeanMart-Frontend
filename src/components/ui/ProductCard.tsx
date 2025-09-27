@@ -147,13 +147,13 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Roast Levels - limit to 2 badges */}
         <div className="flex flex-wrap gap-1 mb-3">
-          {roastLevels.slice(0, 2).map((roastLevel: { roast_level_id: string; name: string }) => (
+          {roastLevels.slice(0, 2).map((roastLevel: any) => (
             <Badge 
-              key={roastLevel.roast_level_id}
+              key={roastLevel.id || roastLevel.roast_level_id}
               variant="outline" 
               className="text-xs bg-orange-100 text-orange-800 border-orange-200"
             >
-              {roastLevel.roast_level_name}
+              {roastLevel.name || roastLevel.roast_level_name}
             </Badge>
           ))}
           {roastLevels.length > 2 && (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { SEO, generateProductStructuredData, generateBreadcrumbStructuredData } from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -225,8 +226,31 @@ export default function ProductDetail() {
   const hasMultipleVariants = product.variants && product.variants.length > 1;
   const hasPriceRange = product.price_min !== product.price_max;
 
+  // Generate SEO data
+  const breadcrumbStructuredData = generateBreadcrumbStructuredData([
+    { name: 'Home', url: '/' },
+    { name: 'Products', url: '/products' },
+    { name: product.name, url: `/product/${product.slug}` }
+  ]);
+
+  const productStructuredData = generateProductStructuredData(product);
+
+  const getProductImage = () => {
+    const firstImage = product.images?.[0]?.image_url;
+    return firstImage ? `https://beanmart.com${firstImage}` : '/coffee-placeholder.jpg';
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <SEO
+        title={`${product.name} - Premium Coffee`}
+        description={product.short_description || `${product.name} - Premium coffee beans available at Beanmart. ${product.long_description?.substring(0, 150) || ''}`}
+        keywords={`${product.name}, coffee beans, ${product.categories?.map(c => c.name).join(', ')}, ${product.roastLevels?.map(r => r.name).join(', ')}, premium coffee`}
+        url={`/product/${product.slug}`}
+        type="product"
+        image={getProductImage()}
+        structuredData={[breadcrumbStructuredData, productStructuredData]}
+      />
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
         <button 

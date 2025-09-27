@@ -1,222 +1,164 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { SEO, generateBreadcrumbStructuredData } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ProductGrid } from '@/components/ui/ProductGrid';
-import { productsApi as api, categoriesApi, roastLevelsApi } from '@/lib/api';
-import { Product, ProductsResponse, Category, RoastLevel } from '@/types/product';
+import { Pagination, PaginationInfo } from '@/components/ui/Pagination';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { categoriesApi, roastLevelsApi } from '@/lib/api';
+import { Category, RoastLevel } from '@/types/product';
 import { Search, Filter, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useCachedProductsWithPagination } from '@/hooks/useCachedProductsWithPagination';
 
 export default function ProductPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [productsData, setProductsData] = useState<ProductsResponse>({
-    products: [],
-    pagination: { page: 1, limit: 12, total: 0, total_pages: 0 }
-  });
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [roastFilter, setRoastFilter] = useState(searchParams.get('roast') || '');
-  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category') || '');
-  const [weightFilter, setWeightFilter] = useState(searchParams.get('weight') || '');
+  
+  // Get current page from URL params
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
+  const searchQuery = searchParams.get('search') || '';
+  const roastFilterSlug = searchParams.get('roast') || '';
+  const categoryFilterSlug = searchParams.get('category') || '';
+  const weightFilter = searchParams.get('weight') || '';
+  const itemsPerPage = 12;
 
-  // Fetch categories and roast levels
+  // Fetch categories and roast levels with caching
   const { data: categoriesResponse } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.getAllCategories(),
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
   });
 
   const { data: roastLevelsResponse } = useQuery({
     queryKey: ['roast-levels'],
     queryFn: () => roastLevelsApi.getAllRoastLevels(),
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
   });
 
-  const categories = categoriesResponse?.data || [];
-  const roastLevels = roastLevelsResponse?.data || [];
+  const categories = (categoriesResponse as any)?.data || [];
+  const roastLevels = (roastLevelsResponse as any)?.data || [];
 
-  const loadProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await api.getAllProducts();
+  // Convert slugs to IDs for filtering
+  const roastFilter = roastLevels.find((rl: any) => rl.slug === roastFilterSlug)?.id || '';
+  const categoryFilter = categories.find((cat: any) => cat.slug === categoryFilterSlug)?.id || '';
 
-      // Transform API response to match frontend expectations
-      let products: Product[] = [];
-      if (response.success && response.data && Array.isArray(response.data)) {
-        products = response.data
-          // Filter out inactive products
-          .filter((apiProduct: unknown) => (apiProduct as { is_active?: boolean }).is_active !== false)
-          .map((apiProduct: unknown) => {
-            const product = apiProduct as {
-              id: string;
-              slug: string;
-              name: string;
-              short_description?: string;
-              long_description?: string;
-              currency: string;
-              is_active: boolean;
-              created_at: string;
-              updated_at: string;
-              categories?: Array<{
-                id: string;
-                name: string;
-                slug: string;
-              }>;
-              roastLevels?: Array<{
-                id: string;
-                name: string;
-                slug: string;
-              }>;
-              variants?: Array<{
-                id: string;
-                product_id: string;
-                price: string;
-                compare_at_price?: string;
-                stock: number;
-                weight_gram?: number;
-                is_active: boolean;
-                created_at: string;
-                updated_at: string;
-                images?: Array<{
-                  id: string;
-                  variant_id: string;
-                  url: string;
-                  position: number;
-                  created_at: string;
-                  updated_at: string;
-                }>;
-              }>;
-            };
-            
-            // Calculate price range from variants
-            const activeVariants = product.variants?.filter(v => v.is_active).map(v => ({
-              ...v,
-              price: Number(v.price),
-              compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
-              stock: Number(v.stock),
-              weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
-            })) || [];
-            const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => v.price)) : 0;
-            const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => v.price)) : 0;
-            
-            return {
-              id: product.id,
-              slug: product.slug,
-              name: product.name,
-              short_description: product.short_description || '',
-              long_description: product.long_description || '',
-              price_min: minPrice,
-              price_max: maxPrice,
-              origin: '', // Not available in current API
-              roast_level: 'medium' as const, // Default value - will be overridden by actual roast levels
-              tasting_notes: [], // Not available in current API
-              processing_method: '', // Not available in current API
-              altitude: '', // Not available in current API
-              producer: '', // Not available in current API
-              harvest_date: '', // Not available in current API
-              is_featured: false, // Not available in current API
-              is_active: product.is_active !== false,
-              category_id: '', // Not available in current API
-              created_at: product.created_at,
-              updated_at: product.updated_at,
-              variants: activeVariants,
-              images: [], // Images are now part of variants
-              categories: product.categories || [],
-              roastLevels: product.roastLevels || []
-            };
-          });
-      }
-      
-      // Apply client-side filters
-      let filteredProducts = [...products];
-      
-      // Search filter
-      if (searchQuery) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.short_description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      
-      // Category filter
-      if (categoryFilter) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.categories?.some((cat: { category_id: string }) => cat.category_id === categoryFilter)
-        );
-      }
-      
-      // Roast level filter
-      if (roastFilter) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.roastLevels?.some((roast: { roast_level_id: string }) => roast.roast_level_id === roastFilter)
-        );
-      }
-      
-      // Weight filter (client-side)
-      if (weightFilter) {
-        const [min, max] = weightFilter.split('-').map(Number);
-        filteredProducts = filteredProducts.filter(p => {
-          return p.variants?.some(v => {
-            const weight = v.weight_gram || 0;
-            return weight >= min && weight <= max;
-          });
-        });
-      }
+  // Use cached products with pagination
+  const { data: productsData, loading, error, refetch } = useCachedProductsWithPagination(
+    currentPage,
+    itemsPerPage,
+    searchQuery,
+    roastFilter,
+    categoryFilter,
+    weightFilter
+  );
 
-      setProductsData({
-        products: filteredProducts,
-        pagination: {
-          page: 1,
-          limit: 12,
-          total: filteredProducts.length,
-          total_pages: 1
-        }
-      });
-    } catch (error) {
-      console.error('Failed to load products:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, categoryFilter, roastFilter, weightFilter]);
-
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
-
+  // Update URL params when filters change
   const updateFilters = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
-    if (value && value !== 'all') {
-      newParams.set(key, value);
-    } else {
+    if (value === '' || value === 'all') {
       newParams.delete(key);
+    } else {
+      // For category and roast, use slug instead of ID
+      if (key === 'category') {
+        const category = categories.find(cat => cat.id === value);
+        newParams.set(key, category?.slug || value);
+      } else if (key === 'roast') {
+        const roastLevel = roastLevels.find(rl => rl.id === value);
+        newParams.set(key, roastLevel?.slug || value);
+      } else {
+        newParams.set(key, value);
+      }
     }
-    newParams.delete('page'); // Reset to first page when filtering
+    newParams.delete('page'); // Reset to page 1 when filters change
+    setSearchParams(newParams);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', page.toString());
     setSearchParams(newParams);
   };
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setRoastFilter('');
-    setCategoryFilter('');
-    setWeightFilter('');
     setSearchParams({});
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    updateFilters('search', searchQuery);
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const searchValue = formData.get('search') as string;
+    updateFilters('search', searchValue);
   };
 
   const activeFiltersCount = [
     searchQuery,
-    roastFilter,
-    categoryFilter,
+    roastFilterSlug,
+    categoryFilterSlug,
     weightFilter
   ].filter(Boolean).length;
 
+  // Generate SEO data
+  const breadcrumbStructuredData = generateBreadcrumbStructuredData([
+    { name: 'Home', url: '/' },
+    { name: 'Products', url: '/products' }
+  ]);
+
+  const getPageTitle = () => {
+    const parts = ['Coffee Products'];
+    if (searchQuery) parts.unshift(`"${searchQuery}"`);
+    if (categoryFilterSlug && categories) {
+      const category = categories.find(c => c.slug === categoryFilterSlug);
+      if (category) parts.unshift(category.name);
+    }
+    if (roastFilterSlug && roastLevels) {
+      const roast = roastLevels.find(r => r.slug === roastFilterSlug);
+      if (roast) parts.unshift(roast.name);
+    }
+    return parts.join(' - ');
+  };
+
+  const getPageDescription = () => {
+    let description = 'Browse our premium collection of coffee beans. ';
+    if (searchQuery) description += `Search results for "${searchQuery}". `;
+    if (categoryFilterSlug && categories) {
+      const category = categories.find(c => c.slug === categoryFilterSlug);
+      if (category) description += `${category.name} coffee beans. `;
+    }
+    if (roastFilterSlug && roastLevels) {
+      const roast = roastLevels.find(r => r.slug === roastFilterSlug);
+      if (roast) description += `${roast.name} coffee beans. `;
+    }
+    description += 'From single origin to blends, light to dark roast.';
+    return description;
+  };
+
+  const getPageUrl = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (categoryFilterSlug) params.set('category', categoryFilterSlug);
+    if (roastFilterSlug) params.set('roast', roastFilterSlug);
+    if (weightFilter) params.set('weight', weightFilter);
+    if (currentPage > 1) params.set('page', currentPage.toString());
+    return `/products${params.toString() ? '?' + params.toString() : ''}`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={getPageTitle()}
+        description={getPageDescription()}
+        keywords="coffee products, coffee beans, single origin, coffee blends, light roast, medium roast, dark roast, premium coffee, specialty coffee"
+        url={getPageUrl()}
+        type="website"
+        structuredData={breadcrumbStructuredData}
+      />
       {/* Header */}
       <section className="bg-muted/30 py-12">
         <div className="container max-w-screen-2xl">
@@ -230,54 +172,59 @@ export default function ProductPage() {
       </section>
 
       <div className="container max-w-screen-2xl py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <aside className="w-full lg:w-64 space-y-6">
-            <div className="bg-card p-6 rounded-lg card-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-coffee-dark flex items-center">
-                  <Filter className="h-4 w-4 mr-2" />
+          <div className="lg:col-span-1">
+            <Card className="sticky top-4">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="font-display text-lg font-semibold text-coffee-dark">
                   Filters
-                </h3>
+                  </h2>
                 {activeFiltersCount > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={clearFilters}
-                    className="text-xs"
+                      className="text-muted-foreground hover:text-coffee-dark"
                   >
-                    Clear all
-                    <X className="h-3 w-3 ml-1" />
+                      <X className="h-4 w-4 mr-1" />
+                      Clear ({activeFiltersCount})
                   </Button>
                 )}
               </div>
 
+                <div className="space-y-6">
               {/* Search */}
-              <div className="space-y-2 mb-6">
+                  <form onSubmit={handleSearch} className="space-y-2">
                 <label className="text-sm font-medium text-coffee-dark">
                   Search
                 </label>
-                <form onSubmit={handleSearch} className="flex gap-2">
+                    <div className="flex gap-2">
                   <Input
-                    placeholder="Search coffee..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                        name="search"
+                        placeholder="Search products..."
+                        defaultValue={searchQuery}
                     className="flex-1"
                   />
-                  <Button type="submit" size="icon" variant="coffee">
+                      <Button type="submit" size="sm" variant="coffee-outline">
                     <Search className="h-4 w-4" />
                   </Button>
+                    </div>
                 </form>
-              </div>
 
               {/* Category */}
-              <div className="space-y-2 mb-6">
+                  <div className="space-y-2">
                 <label className="text-sm font-medium text-coffee-dark">
                   Category
                 </label>
-                <Select value={categoryFilter} onValueChange={(value) => {
-                  setCategoryFilter(value === 'all' ? '' : value);
-                  updateFilters('category', value === 'all' ? '' : value);
+                    <Select value={categoryFilterSlug} onValueChange={(value) => {
+                      if (value === 'all') {
+                        updateFilters('category', '');
+                      } else {
+                        const category = categories.find(cat => cat.slug === value);
+                        updateFilters('category', category?.id || '');
+                      }
                 }}>
                   <SelectTrigger>
                     <SelectValue placeholder="All categories" />
@@ -285,7 +232,7 @@ export default function ProductPage() {
                   <SelectContent>
                     <SelectItem value="all">All categories</SelectItem>
                     {categories.map((category: Category) => (
-                      <SelectItem key={category.id} value={category.id}>
+                          <SelectItem key={category.id} value={category.slug}>
                         {category.name}
                       </SelectItem>
                     ))}
@@ -294,13 +241,17 @@ export default function ProductPage() {
               </div>
 
               {/* Roast Level */}
-              <div className="space-y-2 mb-6">
+                  <div className="space-y-2">
                 <label className="text-sm font-medium text-coffee-dark">
                   Roast Level
                 </label>
-                <Select value={roastFilter} onValueChange={(value) => {
-                  setRoastFilter(value === 'all' ? '' : value);
-                  updateFilters('roast', value === 'all' ? '' : value);
+                    <Select value={roastFilterSlug} onValueChange={(value) => {
+                      if (value === 'all') {
+                        updateFilters('roast', '');
+                      } else {
+                        const roastLevel = roastLevels.find(rl => rl.slug === value);
+                        updateFilters('roast', roastLevel?.id || '');
+                      }
                 }}>
                   <SelectTrigger>
                     <SelectValue placeholder="All roasts" />
@@ -308,7 +259,7 @@ export default function ProductPage() {
                   <SelectContent>
                     <SelectItem value="all">All roasts</SelectItem>
                     {roastLevels.map((roastLevel: RoastLevel) => (
-                      <SelectItem key={roastLevel.id} value={roastLevel.id}>
+                          <SelectItem key={roastLevel.id} value={roastLevel.slug}>
                         {roastLevel.name}
                       </SelectItem>
                     ))}
@@ -317,119 +268,114 @@ export default function ProductPage() {
               </div>
 
               {/* Weight Range */}
-              <div className="space-y-2 mb-6">
+                  <div className="space-y-2">
                 <label className="text-sm font-medium text-coffee-dark">
                   Weight Range
                 </label>
                 <Select value={weightFilter} onValueChange={(value) => {
-                  setWeightFilter(value === 'all' ? '' : value);
-                  updateFilters('weight', value === 'all' ? '' : value);
+                      updateFilters('weight', value);
                 }}>
                   <SelectTrigger>
                     <SelectValue placeholder="All weights" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All weights</SelectItem>
-                    <SelectItem value="0-250">Under 250g</SelectItem>
+                        <SelectItem value="100-250">100g - 250g</SelectItem>
                     <SelectItem value="250-500">250g - 500g</SelectItem>
                     <SelectItem value="500-1000">500g - 1kg</SelectItem>
-                    <SelectItem value="1000-10000">1kg+</SelectItem>
+                        <SelectItem value="1000-2000">1kg - 2kg</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-          </aside>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Products */}
-          <main className="flex-1">
-            {/* Active Filters */}
+          {/* Products Grid */}
+          <div className="lg:col-span-3">
+            {/* Results Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <h2 className="font-display text-xl font-semibold text-coffee-dark">
+                  Products
+                </h2>
             {activeFiltersCount > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {searchQuery && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    Search: {searchQuery}
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        setSearchQuery('');
-                        updateFilters('search', '');
-                      }}
-                    />
-                  </Badge>
-                )}
-                {categoryFilter && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    {categories.find((cat: Category) => cat.id === categoryFilter)?.name || 'Category'}
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        setCategoryFilter('');
-                        updateFilters('category', '');
-                      }}
-                    />
-                  </Badge>
-                )}
-                {roastFilter && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    {roastLevels.find((roast: RoastLevel) => roast.id === roastFilter)?.name || 'Roast'}
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        setRoastFilter('');
-                        updateFilters('roast', '');
-                      }}
-                    />
-                  </Badge>
-                )}
-                {weightFilter && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    {weightFilter.replace('-', ' - ')}g
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                      onClick={() => {
-                        setWeightFilter('');
-                        updateFilters('weight', '');
-                      }}
-                    />
+                  <Badge variant="secondary" className="bg-coffee-medium/10 text-coffee-medium">
+                    {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} applied
                   </Badge>
                 )}
               </div>
-            )}
-
-            {/* Results Header */}
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                {!loading && (
-                  <p className="text-muted-foreground">
-                    Showing {productsData.products.length} products
-                  </p>
-                )}
+              
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {productsData?.pagination.total || 0} products
+                </span>
               </div>
             </div>
 
-            {/* Product Grid */}
-            <ProductGrid 
-              products={productsData.products} 
-              loading={loading}
-              className="mb-8"
-            />
-
-            {/* Pagination - Simple implementation for now */}
-            {productsData.products.length > 0 && productsData.pagination.total_pages > 1 && (
-              <div className="flex justify-center space-x-2">
-                {Array.from({ length: productsData.pagination.total_pages }, (_, i) => (
-                  <Button
-                    key={i + 1}
-                    variant={productsData.pagination.page === i + 1 ? "coffee" : "outline"}
-                    size="sm"
-                    onClick={() => updateFilters('page', (i + 1).toString())}
-                  >
-                    {i + 1}
-                  </Button>
+            {/* Loading State */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <Skeleton className="aspect-square w-full" />
+                    <CardContent className="p-3 space-y-3">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-6 w-1/2" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-20" />
+                      </div>
+                      <Skeleton className="h-8 w-full" />
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="text-muted-foreground mb-4">
+                  Failed to load products. Please try again.
+                </div>
+                <Button onClick={() => refetch()} variant="coffee-outline">
+                  Retry
+                </Button>
+              </div>
+            ) : productsData?.products.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-muted-foreground mb-4">
+                  No products found matching your criteria.
+                </div>
+                <Button onClick={clearFilters} variant="coffee-outline">
+                  Clear Filters
+                </Button>
+              </div>
+            ) : (
+              <>
+                {/* Products Grid */}
+                <ProductGrid products={productsData?.products || []} />
+                
+                {/* Pagination */}
+                {productsData && productsData.pagination.total_pages > 1 && (
+                  <div className="mt-12 space-y-4">
+                    <PaginationInfo
+                      currentPage={productsData.pagination.page}
+                      totalPages={productsData.pagination.total_pages}
+                      totalItems={productsData.pagination.total}
+                      itemsPerPage={productsData.pagination.limit}
+                      className="text-center"
+                    />
+                    <Pagination
+                      currentPage={productsData.pagination.page}
+                      totalPages={productsData.pagination.total_pages}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
             )}
-          </main>
+          </div>
         </div>
       </div>
     </div>
