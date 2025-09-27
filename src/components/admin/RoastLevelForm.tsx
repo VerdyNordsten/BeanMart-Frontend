@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Label } from '@/components/atoms/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/card';
 import { useToast } from '@/hooks/use-toast';
 import { roastLevelsApi } from '@/lib/api';
-import type { RoastLevel, RoastLevelFormData } from '@/types/product';
+import type { RoastLevel } from '@/types/product';
 
 // Validation schema
 const roastLevelSchema = z.object({

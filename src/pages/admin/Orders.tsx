@@ -1,33 +1,26 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/card';
+import { Badge } from '@/components/atoms/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/atoms/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/molecules/table';
 import { AlertCircle } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/molecules/dropdown-menu';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
   DialogDescription 
-} from '@/components/ui/dialog';
+} from '@/components/molecules/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { ordersApi } from '@/lib/api';
 import { formatAPIError } from '@/lib/api-client';

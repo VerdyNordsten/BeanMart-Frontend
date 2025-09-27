@@ -4,12 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuthStore } from "@/lib/auth";
 import { usersApi, authApi } from "@/lib/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/molecules/card";
+import { Button } from "@/components/atoms/button";
+import { Input } from "@/components/atoms/input";
 import { useToast } from "@/hooks/use-toast";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/molecules/form";
+import { Separator } from "@/components/molecules/separator";
 import { User, Mail, Phone, Calendar } from "lucide-react";
 
 const profileFormSchema = z.object({
@@ -52,17 +52,9 @@ export default function UserProfile() {
   }, [token, setAuth]);
 
   // Split full name into first and last name for display purposes
-  const getFirstAndLastName = (fullName: string = "") => {
-    const names = fullName.trim().split(" ");
-    if (names.length === 1) {
-      return { firstName: names[0], lastName: "" };
-    }
-    const firstName = names[0];
-    const lastName = names.slice(1).join(" ");
-    return { firstName, lastName };
-  };
+  
 
-  const { firstName, lastName } = getFirstAndLastName(user?.full_name);
+  
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),

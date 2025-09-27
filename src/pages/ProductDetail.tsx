@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SEO, generateProductStructuredData, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { productsApi, categoriesApi, roastLevelsApi } from '@/lib/api';
-import { formatPrice, getCurrencySymbol } from '@/utils/currency';
+
+import { Badge } from '@/components/atoms/badge';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/atoms/select';
+import { Skeleton } from '@/components/atoms/skeleton';
+import { Separator } from '@/components/molecules/separator';
+import { productsApi } from '@/lib/api';
+import { formatPrice } from '@/utils/currency';
 import { formatDescription } from '@/utils/textFormatter';
-import { Product, ProductVariant, Category, RoastLevel } from '@/types/product';
-import { useQuery } from '@tanstack/react-query';
+import { Product, ProductVariant } from '@/types/product';
+
 import { useCartStore } from '@/lib/cart';
 import { 
   ShoppingCart, 
@@ -40,25 +40,13 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // Fetch categories and roast levels for display
-  const { data: categoriesResponse } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoriesApi.getAllCategories(),
-  });
-
-  const { data: roastLevelsResponse } = useQuery({
-    queryKey: ['roast-levels'],
-    queryFn: () => roastLevelsApi.getAllRoastLevels(),
-  });
-
-  const categories = categoriesResponse?.data || [];
-  const roastLevels = roastLevelsResponse?.data || [];
+  
 
   useEffect(() => {
     if (slug) {
       loadProduct();
     }
-  }, [slug]);
+  }, [slug, loadProduct]);
 
   const loadProduct = async () => {
     if (!slug) return;

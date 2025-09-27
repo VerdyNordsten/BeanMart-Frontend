@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+
 import { useSearchParams } from 'react-router-dom';
 import { SEO, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { ProductGrid } from '@/components/ui/ProductGrid';
-import { Pagination, PaginationInfo } from '@/components/ui/Pagination';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/atoms/select';
+import { Badge } from '@/components/atoms/badge';
+import { ProductGrid } from '@/components/organisms/ProductGrid';
+import { Pagination, PaginationInfo } from '@/components/molecules/Pagination';
+import { Skeleton } from '@/components/atoms/skeleton';
+import { Card, CardContent } from '@/components/molecules/card';
 import { categoriesApi, roastLevelsApi } from '@/lib/api';
 import { Category, RoastLevel } from '@/types/product';
 import { Search, Filter, X } from 'lucide-react';
@@ -41,12 +41,12 @@ export default function ProductPage() {
     gcTime: 2 * 60 * 60 * 1000, // 2 hours
   });
 
-  const categories = (categoriesResponse as any)?.data || [];
-  const roastLevels = (roastLevelsResponse as any)?.data || [];
+  const categories = (categoriesResponse as { data: Category[] })?.data || [];
+  const roastLevels = (roastLevelsResponse as { data: RoastLevel[] })?.data || [];
 
   // Convert slugs to IDs for filtering
-  const roastFilter = roastLevels.find((rl: any) => rl.slug === roastFilterSlug)?.id || '';
-  const categoryFilter = categories.find((cat: any) => cat.slug === categoryFilterSlug)?.id || '';
+  const roastFilter = roastLevels.find((rl) => rl.slug === roastFilterSlug)?.id || '';
+  const categoryFilter = categories.find((cat) => cat.slug === categoryFilterSlug)?.id || '';
 
   // Use cached products with pagination
   const { data: productsData, loading, error, refetch } = useCachedProductsWithPagination(

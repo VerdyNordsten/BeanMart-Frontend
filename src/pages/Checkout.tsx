@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/card';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Label } from '@/components/atoms/label';
+import { Textarea } from '@/components/atoms/textarea';
+import { Separator } from '@/components/molecules/separator';
 import { useCartStore } from '@/lib/cart';
 import { useAuthStore } from '@/lib/auth';
 import { formatPrice } from '@/utils/currency';
@@ -27,7 +26,7 @@ import { Link } from 'react-router-dom';
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { items, getTotalItems, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
   
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [shippingAddress, setShippingAddress] = useState({
@@ -46,14 +45,14 @@ export default function Checkout() {
   const [useExistingAddress, setUseExistingAddress] = useState(true);
 
   // Fetch user addresses
-  const { data: addressesResponse, isLoading: addressesLoading, error: addressesError } = useQuery({
+  const { data: addressesResponse, error: addressesError } = useQuery({
     queryKey: ['user-addresses'],
     queryFn: () => userAddressesApi.getUserAddresses(),
     enabled: isAuthenticated,
     retry: 1
   });
 
-  const addresses = addressesResponse?.data || [];
+  const addresses = useMemo(() => addressesResponse?.data || [], [addressesResponse]);
   const hasAddresses = addresses.length > 0;
 
   // Redirect if not authenticated

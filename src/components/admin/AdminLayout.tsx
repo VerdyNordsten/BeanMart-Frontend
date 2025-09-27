@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, Outlet, Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/atoms/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/molecules/sheet';
+import { Badge } from '@/components/atoms/badge';
 import { 
   Menu, 
   LayoutDashboard, 

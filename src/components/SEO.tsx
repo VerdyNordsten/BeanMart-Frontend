@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { Product, VariantImage } from '@/types/product';
 
 interface SEOProps {
   title?: string;
@@ -90,12 +91,12 @@ export function SEO({
 }
 
 // Helper function to generate product structured data
-export function generateProductStructuredData(product: any) {
+export function generateProductStructuredData(product: Product) {
   return {
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.name,
-    "image": product.images?.map((img: any) => `https://beanmart.com${img.image_url}`) || [],
+    "image": product.images?.map((img: VariantImage) => `https://beanmart.com${img.url}`) || [],
     "description": product.short_description,
     "brand": {
       "@type": "Brand",
@@ -106,7 +107,7 @@ export function generateProductStructuredData(product: any) {
       "lowPrice": product.price_min,
       "highPrice": product.price_max,
       "priceCurrency": "USD",
-      "availability": product.variants?.some((v: any) => v.stock_quantity > 0) 
+      "availability": product.variants?.some((v) => v.stock > 0) 
         ? "https://schema.org/InStock" 
         : "https://schema.org/OutOfStock"
     },
@@ -115,9 +116,9 @@ export function generateProductStructuredData(product: any) {
       "ratingValue": product.rating,
       "reviewCount": product.review_count || 1
     } : undefined,
-    "category": product.categories?.map((cat: any) => cat.name).join(", "),
+    "category": product.categories?.map((cat) => cat.name).join(", "),
     "additionalProperty": [
-      ...(product.roastLevels?.map((roast: any) => ({
+      ...(product.roastLevels?.map((roast) => ({
         "@type": "PropertyValue",
         "name": "Roast Level",
         "value": roast.name

@@ -4,8 +4,19 @@ interface SEODebugProps {
   enabled?: boolean;
 }
 
+interface SeoData {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonical?: string;
+  structuredData?: Array<Record<string, unknown>>;
+}
+
 export function SEODebug({ enabled = process.env.NODE_ENV === 'development' }: SEODebugProps) {
-  const [seoData, setSeoData] = useState<any>({});
+  const [seoData, setSeoData] = useState<SeoData>({});
 
   useEffect(() => {
     if (!enabled) return;

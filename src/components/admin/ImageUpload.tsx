@@ -1,13 +1,13 @@
 import { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Label } from '@/components/atoms/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/molecules/tabs';
+import { Card, CardContent } from '@/components/molecules/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/molecules/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { variantImagesApi } from '@/lib/api';
-import type { VariantImage } from '@/types/product';
+
 
 interface ImageUploadProps {
   images: Array<{

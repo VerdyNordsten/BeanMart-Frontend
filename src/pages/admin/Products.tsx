@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/card';
+import { Badge } from '@/components/atoms/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/lib/auth';
-import { productsApi, productVariantsApi } from '@/lib/api';
+import { productsApi } from '@/lib/api';
 import { SimpleProductEditModal } from '@/components/admin/SimpleProductEditModal';
 import { SimpleProductAddModal } from '@/components/admin/SimpleProductAddModal';
 import type { Product } from '@/types/product';

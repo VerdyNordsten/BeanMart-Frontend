@@ -152,12 +152,43 @@ export function useCachedProductsWithPagination(
   };
 }
 
-function transformApiProducts(apiProducts: any[]): Product[] {
+function transformApiProducts(apiProducts: Array<{
+  id: string;
+  slug: string;
+  name: string;
+  short_description?: string;
+  long_description?: string;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  variants?: Array<{
+    id: string;
+    product_id: string;
+    price: string;
+    compare_at_price?: string;
+    stock: string;
+    weight_gram?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  }>;
+  categories?: Array<{
+    category_id: string;
+    category_slug: string;
+    category_name: string;
+  }>;
+  roastLevels?: Array<{
+    roast_level_id: string;
+    roast_level_slug: string;
+    roast_level_name: string;
+  }>;
+}>): Product[] {
   return apiProducts
-    .filter((apiProduct: any) => apiProduct.is_active !== false)
-    .map((apiProduct: any) => {
+    .filter((apiProduct) => apiProduct.is_active !== false)
+    .map((apiProduct) => {
       // Calculate price range from variants
-      const activeVariants = apiProduct.variants?.filter((v: any) => v.is_active).map((v: any) => ({
+      const activeVariants = apiProduct.variants?.filter((v) => v.is_active).map((v) => ({
         ...v,
         price: Number(v.price),
         compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
@@ -165,8 +196,8 @@ function transformApiProducts(apiProducts: any[]): Product[] {
         weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
       })) || [];
       
-      const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map((v: any) => v.price)) : 0;
-      const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map((v: any) => v.price)) : 0;
+      const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map((v) => v.price)) : 0;
+      const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map((v) => v.price)) : 0;
       
       return {
         id: apiProduct.id,
@@ -191,12 +222,12 @@ function transformApiProducts(apiProducts: any[]): Product[] {
         updated_at: apiProduct.updated_at,
         variants: activeVariants,
         images: [],
-        categories: apiProduct.categories?.map((cat: any) => ({
+        categories: apiProduct.categories?.map((cat) => ({
           id: cat.category_id,
           slug: cat.category_slug,
           name: cat.category_name
         })) || [],
-        roastLevels: apiProduct.roastLevels?.map((rl: any) => ({
+        roastLevels: apiProduct.roastLevels?.map((rl) => ({
           id: rl.roast_level_id,
           slug: rl.roast_level_slug,
           name: rl.roast_level_name
@@ -214,7 +245,12 @@ function getCachedData(key: string): CachedData<PaginationData> | null {
   }
 }
 
-function setCachedData(key: string, data: PaginationData, filters: any): void {
+function setCachedData(key: string, data: PaginationData, filters: {
+  search: string;
+  roast: string;
+  category: string;
+  weight: string;
+}): void {
   try {
     const cacheData: CachedData<PaginationData> = {
       data,

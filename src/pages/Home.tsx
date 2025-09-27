@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SEO, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ProductCard } from '@/components/ui/ProductCard';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { productsApi as api } from '@/lib/api';
+import { Button } from '@/components/atoms/button';
+import { Badge } from '@/components/atoms/badge';
+import { ProductCard } from '@/components/molecules/ProductCard';
+import { Card, CardContent } from '@/components/molecules/card';
+import { Input } from '@/components/atoms/input';
+import { Skeleton } from '@/components/atoms/skeleton';
+
 import { Product } from '@/types/product';
 import { ArrowRight, Coffee, Leaf, Award, Mail } from 'lucide-react';
 import { useCachedProducts } from '@/hooks/useCachedProducts';

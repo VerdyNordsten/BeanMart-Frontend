@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from "@/lib/auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/molecules/card";
+import { Button } from "@/components/atoms/button";
+import { Separator } from "@/components/molecules/separator";
 import { Link } from "react-router-dom";
 import { ShoppingBag, MapPin, CreditCard, User } from "lucide-react";
 import { ordersApi } from "@/lib/api";
@@ -68,7 +68,7 @@ export default function UserDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Welcome back, {user?.first_name || "Customer"}!</h1>
+        <h1 className="text-3xl font-bold">Welcome back, {user?.full_name || "Customer"}!</h1>
         <p className="text-muted-foreground">
           Manage your account, orders, and preferences
         </p>
@@ -223,7 +223,7 @@ export default function UserDashboard() {
                 </div>
                 <div>
                   <p className="font-medium">
-                    {user?.first_name} {user?.last_name}
+                    {user?.full_name}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {user?.email}

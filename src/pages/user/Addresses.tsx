@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/molecules/card";
+import { Button } from "@/components/atoms/button";
+import { Separator } from "@/components/molecules/separator";
+import { Badge } from "@/components/atoms/badge";
 import { Plus, MapPin, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/auth";
@@ -14,10 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/molecules/dialog";
+import { Input } from "@/components/atoms/input";
+import { Label } from "@/components/atoms/label";
+
 
 interface Address {
   id: string;
@@ -77,7 +77,7 @@ export default function UserAddresses() {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [toast]);
 
   useEffect(() => {
     if (user && token) {

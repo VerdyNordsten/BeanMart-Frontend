@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/molecules/card";
+import { Badge } from "@/components/atoms/badge";
+import { Button } from "@/components/atoms/button";
+import { Skeleton } from "@/components/atoms/skeleton";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/molecules/sheet";
 import { ordersApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/molecules/alert";
 import { AlertCircle, Package, Truck, CheckCircle, XCircle, Clock, Eye } from "lucide-react";
-import { Order, OrderItem } from "@/types/product";
+import { Order } from "@/types/product";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType; className: string }> = {
   pending: { label: "Pending", icon: Clock, className: "bg-yellow-100 text-yellow-800" },

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/molecules/dialog';
+import { Button } from '@/components/atoms/button';
 import { Loader2 } from 'lucide-react';
 import { productsApi } from '@/lib/api';
 import { ProductForm } from './ProductForm';

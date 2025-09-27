@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { productsApi } from '@/lib/api';
+import { Product } from '@/types/product';
 
 interface CachedData<T> {
-  data: T;
+  data: T[];
   timestamp: number;
   expiry: number;
 }
@@ -10,7 +11,7 @@ interface CachedData<T> {
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 export function useCachedProducts(limit: number, cacheKey: string) {
-  const [data, setData] = useState<any[] | null>(null);
+  const [data, setData] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -80,7 +81,7 @@ function setCachedData(key: string, data: any[]): void {
   }
 }
 
-function isExpired(cachedData: CachedData<any[]>): boolean {
+function isExpired(cachedData: CachedData<Product[]>): boolean {
   return Date.now() > cachedData.expiry;
 }
 

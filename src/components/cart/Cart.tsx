@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { useCartStore } from '@/lib/cart';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/atoms/button';
+import { Card } from '@/components/molecules/card';
+import { Badge } from '@/components/atoms/badge';
+import { ScrollArea } from '@/components/molecules/scroll-area';
+import { Input } from '@/components/atoms/input';
 import { 
   ShoppingCart, 
   X, 

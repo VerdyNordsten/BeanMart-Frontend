@@ -1,13 +1,11 @@
-import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/atoms/button";
+import { Input } from "@/components/atoms/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/molecules/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/molecules/form";
 import { useAuthStore } from "@/lib/auth";
 import { authApi } from "@/lib/api";
 import { formatAPIError } from "@/lib/api-client";
@@ -22,7 +20,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function UserLogin() {
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAuthenticated, isAdmin: isUserAdmin, setAuth } = useAuthStore();
+  const { isAuthenticated, isAdmin: isUserAdmin, setAuth } = useAuthStore();
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),

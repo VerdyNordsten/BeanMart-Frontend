@@ -1,6 +1,6 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Leaf, Award, Heart, Globe, Users, Coffee } from 'lucide-react';
+import { Card, CardContent } from '@/components/molecules/card';
+import { Badge } from '@/components/atoms/badge';
+import { Leaf, Award, Heart, Globe, Coffee } from 'lucide-react';
 import farmImage from '@/assets/coffee-farm.jpg';
 
 const milestones = [

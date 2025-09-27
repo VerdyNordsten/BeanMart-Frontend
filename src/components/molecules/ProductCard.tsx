@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/atoms/badge';
+import { Button } from '@/components/atoms/button';
+import { Card, CardContent } from '@/components/molecules/card';
 import { Product } from '@/types/product';
 import { Star, Package } from 'lucide-react';
-import { formatPrice, formatPriceRange, getCurrencySymbol } from '@/utils/currency';
+import { formatPrice, formatPriceRange } from '@/utils/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -147,7 +147,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Roast Levels - limit to 2 badges */}
         <div className="flex flex-wrap gap-1 mb-3">
-          {roastLevels.slice(0, 2).map((roastLevel: any) => (
+          {roastLevels.slice(0, 2).map((roastLevel) => (
             <Badge 
               key={roastLevel.id || roastLevel.roast_level_id}
               variant="outline" 

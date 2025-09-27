@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/molecules/sheet';
 import { 
   Menu, 
   Search, 
@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+} from '@/components/molecules/dropdown-menu';
 import { useAuthStore } from '@/lib/auth';
 import { useCartStore } from '@/lib/cart';
 
@@ -185,7 +185,7 @@ export function Header() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {user?.first_name} {user?.last_name}
+                      {user?.full_name}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user?.email}

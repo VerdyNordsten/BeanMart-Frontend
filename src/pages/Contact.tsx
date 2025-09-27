@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Textarea } from '@/components/atoms/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/card';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, MapPin, Clock, Coffee } from 'lucide-react';
 

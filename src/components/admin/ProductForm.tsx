@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
+import { Textarea } from '@/components/atoms/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/molecules/card';
+import { Label } from '@/components/atoms/label';
+import { Switch } from '@/components/molecules/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/atoms/select';
 import { useToast } from '@/hooks/use-toast';
 import { productsApi, productVariantsApi, variantImagesApi, categoriesApi, roastLevelsApi, productRelationsApi } from '@/lib/api';
 import { ImageUpload } from './ImageUpload';
-import type { Product, ProductFormData, Category, RoastLevel } from '@/types/product';
+import type { Product, Category, RoastLevel } from '@/types/product';
 
 // Validation schema
 const productSchema = z.object({
