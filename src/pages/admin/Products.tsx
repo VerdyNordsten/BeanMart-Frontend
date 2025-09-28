@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/auth";
-import { productsApi, productVariantsApi } from "@/lib/api";
+import { productsApi } from "@/lib/api";
 import { SimpleProductEditModal } from "@/features/admin/SimpleProductEditModal";
 import { SimpleProductAddModal } from "@/features/admin/SimpleProductAddModal";
-import type { Product } from "@/types/product";
+// import type { ProductWithRelations } from "@/types";
 
 export default function AdminProducts() {
   const { toast } = useToast();
@@ -50,8 +50,8 @@ export default function AdminProducts() {
         description: 'Product deleted successfully',
       });
     },
-    onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete product';
+    onError: (deleteError: unknown) => {
+      const errorMessage = deleteError instanceof Error ? deleteError.message : 'Failed to delete product';
       toast({
         title: 'Error',
         description: errorMessage,
@@ -186,11 +186,11 @@ export default function AdminProducts() {
               )}
 
               {/* Product Images */}
-              {product.images && product.images.length > 0 && (
+              {product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-medium mb-2">Images ({product.images.length})</h4>
+                  <h4 className="text-sm font-medium mb-2">Images ({product.variants[0].images.length})</h4>
                   <div className="flex space-x-2">
-                    {product.images.slice(0, 3).map((image, index) => (
+                    {product.variants[0].images.slice(0, 3).map((image, index) => (
                       <img
                         key={index}
                         src={image.url}
@@ -198,9 +198,9 @@ export default function AdminProducts() {
                         className="w-12 h-12 object-cover rounded"
                       />
                     ))}
-                    {product.images.length > 3 && (
+                    {product.variants[0].images.length > 3 && (
                       <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs">
-                        +{product.images.length - 3}
+                        +{product.variants[0].images.length - 3}
                       </div>
                     )}
                   </div>

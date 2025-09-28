@@ -3,7 +3,7 @@ import { Badge } from "@/ui/badge";
 import { Separator } from "@/ui/separator";
 import { format } from "date-fns";
 import { Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
-import { Order, OrderItem } from "@/types/product";
+import { Order } from "@/types";
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType; className: string }> = {
   pending: { label: "Pending", icon: Clock, className: "bg-yellow-100 text-yellow-800" },

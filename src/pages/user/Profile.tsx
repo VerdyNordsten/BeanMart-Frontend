@@ -53,17 +53,17 @@ export default function UserProfile() {
   }, [token, setAuth]);
 
   // Split full name into first and last name for display purposes
-  const getFirstAndLastName = (fullName: string = "") => {
-    const names = fullName.trim().split(" ");
-    if (names.length === 1) {
-      return { firstName: names[0], lastName: "" };
-    }
-    const firstName = names[0];
-    const lastName = names.slice(1).join(" ");
-    return { firstName, lastName };
-  };
+  // const getFirstAndLastName = (fullName: string = "") => {
+  //   const names = fullName.trim().split(" ");
+  //   if (names.length === 1) {
+  //     return { firstName: names[0], lastName: "" };
+  //   }
+  //   const firstName = names[0];
+  //   const lastName = names.slice(1).join(" ");
+  //   return { firstName, lastName };
+  // };
 
-  const { firstName, lastName } = getFirstAndLastName(user?.full_name);
+  // const { firstName, lastName } = getFirstAndLastName(user?.full_name);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),

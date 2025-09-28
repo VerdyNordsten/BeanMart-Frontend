@@ -6,6 +6,8 @@ import { Badge } from "@/ui/badge";
 import { Plus, CreditCard, Edit, Trash2, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Note: Payment methods are not in our current database schema
+// This is a placeholder interface for future implementation
 interface PaymentMethod {
   id: string;
   type: "credit_card" | "debit_card" | "bank_transfer";

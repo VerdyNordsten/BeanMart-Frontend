@@ -1,9 +1,9 @@
 import { Separator } from "@/ui/separator";
 import { Weight, Package } from "lucide-react";
-import { Product, ProductVariant } from "@/types/product";
+import { ProductWithRelations, ProductVariant } from "@/types";
 
 interface ProductDetailsProps {
-  product: Product;
+  product: ProductWithRelations;
   selectedVariant: ProductVariant | null;
 }
 

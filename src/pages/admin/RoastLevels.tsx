@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/auth";
 import { roastLevelsApi } from "@/lib/api";
 import { RoastLevelForm } from "@/features/admin/RoastLevelForm";
-import type { RoastLevel } from "@/types/product";
+import type { RoastLevel } from "@/types";
 
 export default function AdminRoastLevels() {
   const { toast } = useToast();
@@ -44,8 +44,8 @@ export default function AdminRoastLevels() {
         description: 'Roast level deleted successfully',
       });
     },
-    onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete roast level';
+    onError: (deleteError: unknown) => {
+      const errorMessage = deleteError instanceof Error ? deleteError.message : 'Failed to delete roast level';
       toast({
         title: 'Error',
         description: errorMessage,

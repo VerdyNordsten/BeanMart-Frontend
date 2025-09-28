@@ -4,12 +4,12 @@ import { SEO } from "@/shared/SEO";
 import { generateProductStructuredData, generateBreadcrumbStructuredData } from "@/shared/seo-utils";
 import { Button } from "@/ui/button";
 import { Skeleton } from "@/ui/skeleton";
-import { productsApi, categoriesApi, roastLevelsApi } from "@/lib/api";
-import { Product, ProductVariant } from "@/types/product";
-import { useQuery } from "@tanstack/react-query";
+import { productsApi } from "@/lib/api";
+import { ProductWithRelations, ProductVariant } from "@/types";
 import { useCartStore } from "@/lib/cart";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 import { ProductBreadcrumb } from "@/features/product-detail/ProductBreadcrumb";
 import { ProductImages } from "@/features/product-detail/ProductImages";
 import { ProductInfo } from "@/features/product-detail/ProductInfo";
@@ -21,25 +21,25 @@ export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addItem, openCart } = useCartStore();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   // Fetch categories and roast levels for display
-  const { data: categoriesResponse } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => categoriesApi.getAllCategories(),
-  });
+  // const { data: categoriesResponse } = useQuery({
+  //   queryKey: ['categories'],
+  //   queryFn: () => categoriesApi.getAllCategories(),
+  // });
 
-  const { data: roastLevelsResponse } = useQuery({
-    queryKey: ['roast-levels'],
-    queryFn: () => roastLevelsApi.getAllRoastLevels(),
-  });
+  // const { data: roastLevelsResponse } = useQuery({
+  //   queryKey: ['roast-levels'],
+  //   queryFn: () => roastLevelsApi.getAllRoastLevels(),
+  // });
 
-  const categories = categoriesResponse?.data || [];
-  const roastLevels = roastLevelsResponse?.data || [];
+  // const categories: Category[] = categoriesResponse?.data || [];
+  // const roastLevels: RoastLevel[] = roastLevelsResponse?.data || [];
 
   const loadProduct = useCallback(async () => {
     if (!slug) return;
@@ -51,65 +51,20 @@ export default function ProductDetail() {
       const response = await productsApi.getProductBySlug(slug);
       
       if (response.success && response.data) {
-        const productData = response.data;
+        const productData: ProductWithRelations = response.data;
         
-        // Transform API response to match frontend expectations
-        const transformedProduct: Product = {
-          id: productData.id,
-          slug: productData.slug,
-          name: productData.name,
-          short_description: productData.short_description || "",
-          long_description: productData.long_description || "",
-          currency: productData.currency || "USD",
-          is_active: productData.is_active !== false,
-          created_at: productData.created_at,
-          updated_at: productData.updated_at,
-          variants: productData.variants?.filter((v: { is_active: boolean }) => v.is_active).map((v: {
-            price: string;
-            compare_at_price?: string;
-            stock: string;
-            weight_gram?: string;
-            [key: string]: unknown;
-          }) => ({
-            ...v,
-            price: Number(v.price),
-            compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
-            stock: Number(v.stock),
-            weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
-          })) || [],
-          images: productData.images || [],
-          // Calculate price range from variants
-          price_min: productData.variants?.length > 0 
-            ? Math.min(...productData.variants.map((v: { price: string }) => parseFloat(v.price)))
-            : 0,
-          price_max: productData.variants?.length > 0 
-            ? Math.max(...productData.variants.map((v: { price: string }) => parseFloat(v.price)))
-            : 0,
-          // Default values for missing fields
-          origin: '',
-          roast_level: 'medium' as const,
-          tasting_notes: [],
-          processing_method: '',
-          altitude: '',
-          producer: '',
-          harvest_date: '',
-          is_featured: false,
-          category_id: '',
-          categories: productData.categories || [],
-          roastLevels: productData.roastLevels || []
-        };
+        setProduct(productData);
         
-        setProduct(transformedProduct);
-        
-        // Set first variant as selected by default
-        if (transformedProduct.variants && transformedProduct.variants.length > 0) {
-          setSelectedVariant(transformedProduct.variants[0]);
+        // Set first active variant as selected by default
+        const activeVariants = productData.variants?.filter(v => v.is_active) || [];
+        if (activeVariants.length > 0) {
+          setSelectedVariant(activeVariants[0]);
         }
       } else {
         setError('Product not found');
       }
     } catch (err) {
-      console.error('Failed to load product:', err);
+      logger.error('Failed to load product', { error: err });
       setError('Failed to load product');
     } finally {
       setLoading(false);
@@ -208,7 +163,7 @@ export default function ProductDetail() {
     );
   }
 
-  const images = selectedVariant?.images || product.images || [];
+  const images = selectedVariant?.images || [];
   const hasMultipleVariants = product.variants && product.variants.length > 1;
   const hasPriceRange = product.price_min !== product.price_max;
 
@@ -222,7 +177,7 @@ export default function ProductDetail() {
   const productStructuredData = generateProductStructuredData(product);
 
   const getProductImage = () => {
-    const firstImage = product.images?.[0]?.url;
+    const firstImage = selectedVariant?.images?.[0]?.url || product.variants?.[0]?.images?.[0]?.url;
     return firstImage ? `https://beanmart.com${firstImage}` : '/coffee-placeholder.jpg';
   };
 
@@ -231,7 +186,7 @@ export default function ProductDetail() {
       <SEO
         title={`${product.name} - Premium Coffee`}
         description={product.short_description || `${product.name} - Premium coffee beans available at Beanmart. ${product.long_description?.substring(0, 150) || ""}`}
-        keywords={`${product.name}, coffee beans, ${product.categories?.map(c => c.name).join(', ')}, ${product.roastLevels?.map(r => r.name).join(', ')}, premium coffee`}
+        keywords={`${product.name}, coffee beans, ${product.categories?.map(c => c.name).join(', ')}, ${product.roast_levels?.map(r => r.name).join(', ')}, premium coffee`}
         url={`/product/${product.slug}`}
         type="product"
         image={getProductImage()}

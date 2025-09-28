@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { Label } from "@/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { categoriesApi } from "@/lib/api";
-import type { Category, CategoryFormData } from "@/types/product";
+import type { Category } from "@/types";
 
 // Validation schema
 const categorySchema = z.object({
@@ -27,7 +27,7 @@ interface CategoryFormProps {
 
 export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProps) {
   const { toast } = useToast();
-  const isEditing = !!category;
+  const isEditing = Boolean(category);
   
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),

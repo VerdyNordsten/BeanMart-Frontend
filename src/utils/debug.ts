@@ -3,6 +3,8 @@ export class DebugLogger {
   private static instance: DebugLogger;
   private logs: Array<{timestamp: string, level: string, category: string, message: string, data?: unknown}> = [];
   private isEnabled: boolean = true;
+  private maxLogCount: number = 200;
+  private errorReportCallback?: (error: any) => void;
 
   static getInstance(): DebugLogger {
     if (!DebugLogger.instance) {
@@ -16,6 +18,10 @@ export class DebugLogger {
     this.isEnabled = import.meta.env.DEV;
   }
 
+  setErrorReportCallback(callback: (error: any) => void) {
+    this.errorReportCallback = callback;
+  }
+
   private log(level: string, category: string, message: string, data?: unknown) {
     if (!this.isEnabled) return;
 
@@ -24,23 +30,25 @@ export class DebugLogger {
     
     this.logs.push(logEntry);
     
-    // Keep only last 100 logs
-    if (this.logs.length > 100) {
-      this.logs = this.logs.slice(-100);
+    // Keep only last N logs
+    if (this.logs.length > this.maxLogCount) {
+      this.logs = this.logs.slice(-this.maxLogCount);
     }
 
-    // Console output with styling
-    const style = this.getStyle(level);
-    console.log(
-      `%c[${timestamp}] %c[${level}] %c[${category}] %c${message}`,
-      'color: #666; font-size: 11px;',
-      style.level,
-      'color: #2196F3; font-weight: bold;',
-      'color: #333;'
-    );
     
     if (data) {
       console.log('%cData:', 'color: #666; font-style: italic;', data);
+    }
+
+    // Trigger error report callback if it's an error
+    if (level === 'ERROR' && this.errorReportCallback) {
+      this.errorReportCallback({
+        message,
+        level,
+        category,
+        data,
+        timestamp
+      });
     }
   }
 
@@ -92,16 +100,45 @@ export class DebugLogger {
 
   apiError(error: unknown, url: string) {
     this.log('ERROR', 'API-ERROR', `Error in ${url}`, {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      stack: error.stack
+      message: (error as any)?.message,
+      status: (error as any)?.response?.status,
+      data: (error as any)?.response?.data,
+      stack: (error as any)?.stack
+    });
+  }
+
+  // Performance logging
+  performance(category: string, operation: string, duration: number, data?: unknown) {
+    const level = duration > 1000 ? 'WARN' : 'INFO';
+    this.log(level, `PERF-${category}`, `${operation} took ${duration}ms`, data);
+  }
+
+  // User action logging
+  userAction(action: string, context?: string, data?: unknown) {
+    this.log('INFO', 'USER-ACTION', `${action}${context ? ` in ${context}` : ''}`, data);
+  }
+
+  // State change logging
+  stateChange(component: string, prevState: unknown, newState: unknown, action?: string) {
+    this.log('DEBUG', 'STATE-CHANGE', `${component}${action ? ` - ${action}` : ''}`, {
+      prev: prevState,
+      new: newState
     });
   }
 
   // Get all logs
   getLogs() {
     return [...this.logs];
+  }
+
+  // Get logs by level
+  getLogsByLevel(level: string) {
+    return this.logs.filter(log => log.level === level);
+  }
+
+  // Get logs by category
+  getLogsByCategory(category: string) {
+    return this.logs.filter(log => log.category.includes(category));
   }
 
   // Clear logs
@@ -120,10 +157,20 @@ export class DebugLogger {
       acc[log.level] = (acc[log.level] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-
-    console.log('%c=== DEBUG SUMMARY ===', 'color: #2196F3; font-weight: bold; font-size: 14px;');
     console.table(summary);
     console.log(`Total logs: ${this.logs.length}`);
+  }
+
+  // Get error count
+  getErrorCount() {
+    return this.logs.filter(log => log.level === 'ERROR').length;
+  }
+
+  // Get recent errors
+  getRecentErrors(limit: number = 10) {
+    return this.logs
+      .filter(log => log.level === 'ERROR')
+      .slice(-limit);
   }
 }
 
@@ -138,4 +185,7 @@ export const logError = (error: unknown, url: string) => debug.apiError(error, u
 export const logSuccess = (category: string, message: string, data?: unknown) => debug.success(category, message, data);
 export const logInfo = (category: string, message: string, data?: unknown) => debug.info(category, message, data);
 export const logWarn = (category: string, message: string, data?: unknown) => debug.warn(category, message, data);
+export const logPerf = (category: string, operation: string, duration: number, data?: unknown) => debug.performance(category, operation, duration, data);
+export const logUserAction = (action: string, context?: string, data?: unknown) => debug.userAction(action, context, data);
+export const logStateChange = (component: string, prevState: unknown, newState: unknown, action?: string) => debug.stateChange(component, prevState, newState, action);
 

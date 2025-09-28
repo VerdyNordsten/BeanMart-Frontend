@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { Label } from "@/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { roastLevelsApi } from "@/lib/api";
-import type { RoastLevel, RoastLevelFormData } from "@/types/product";
+import type { RoastLevel } from "@/types";
 
 // Validation schema
 const roastLevelSchema = z.object({
@@ -27,7 +27,7 @@ interface RoastLevelFormProps {
 
 export function RoastLevelForm({ roastLevel, onSuccess, onCancel }: RoastLevelFormProps) {
   const { toast } = useToast();
-  const isEditing = !!roastLevel;
+  const isEditing = Boolean(roastLevel);
   
   const form = useForm<RoastLevelFormValues>({
     resolver: zodResolver(roastLevelSchema),

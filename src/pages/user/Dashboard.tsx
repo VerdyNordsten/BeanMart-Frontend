@@ -5,26 +5,12 @@ import { DashboardHeader } from "@/features/user/dashboard/DashboardHeader";
 import { StatsCards } from "@/features/user/dashboard/StatsCards";
 import { RecentOrders } from "@/features/user/dashboard/RecentOrders";
 import { AccountInfo } from "@/features/user/dashboard/AccountInfo";
-
-interface Order {
-  id: string;
-  order_number: string;
-  status: string;
-  total_amount: number;
-  currency: string;
-  created_at: string;
-}
-
-interface Address {
-  id: string;
-  label: string;
-  is_default: boolean;
-}
+import { Order, UserAddress } from "@/types";
 
 export default function UserDashboard() {
   const { user, token } = useAuthStore();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [addressesLoading, setAddressesLoading] = useState(true);
 

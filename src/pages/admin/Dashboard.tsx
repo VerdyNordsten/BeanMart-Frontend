@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [dateRange, setDateRange] = useState(searchParams.get('range') || "30");
 
-  const { data: ordersData, isLoading } = useQuery({
+  const { data: ordersData } = useQuery({
     queryKey: ['admin-orders', dateRange],
     queryFn: () => ordersApi.getAllOrders({ limit: 1000 }), // Get all orders for aggregation
   });

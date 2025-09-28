@@ -30,6 +30,12 @@ const FormField = <
   );
 };
 
+type FormItemContextValue = {
+  id: string;
+};
+
+const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
+
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
@@ -52,12 +58,6 @@ const useFormField = () => {
     ...fieldState,
   };
 };
-
-type FormItemContextValue = {
-  id: string;
-};
-
-const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
 
 const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
@@ -91,7 +91,7 @@ const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.Compon
         ref={ref}
         id={formItemId}
         aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-        aria-invalid={!!error}
+        aria-invalid={Boolean(error)}
         {...props}
       />
     );

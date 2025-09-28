@@ -42,9 +42,9 @@ export function OrderSummary({ items, subtotal, shipping, total, loading, onSubm
           {items.map((item) => (
             <div key={item.id} className="flex gap-3">
               <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-muted">
-                {item.product.images && item.product.images.length > 0 ? (
+                {item.variant.images && item.variant.images.length > 0 ? (
                   <img
-                    src={item.product.images[0].url}
+                    src={item.variant.images[0].url}
                     alt={item.product.name}
                     className="h-full w-full object-cover"
                   />

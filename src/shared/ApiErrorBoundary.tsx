@@ -1,0 +1,145 @@
+import React from 'react';
+import { ErrorBoundary as ReactErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import { Button } from '@/ui/button';
+import { AlertCircle, RotateCcw, Home, ArrowLeft } from 'lucide-react';
+import { debug } from '@/utils/debug';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+interface ApiErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<FallbackProps>;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  showGoHome?: boolean;
+  showGoBack?: boolean;
+  customMessage?: string;
+}
+
+interface ApiErrorFallbackProps extends FallbackProps {
+  showGoHome?: boolean;
+  showGoBack?: boolean;
+  customMessage?: string;
+}
+
+const ApiErrorFallback: React.FC<ApiErrorFallbackProps> = ({ 
+  error, 
+  resetErrorBoundary,
+  showGoHome = false,
+  showGoBack = false,
+  customMessage 
+}) => {
+  const navigate = useNavigate();
+
+  // Log the error to our debug system
+  debug.error('ApiErrorBoundary', 'API error caught', {
+    message: error.message,
+    stack: error.stack,
+    name: error.name,
+  });
+
+  // Also send to toast notifications
+  toast.error('API Error', {
+    description: error.message || 'An API error occurred',
+    duration: 5000,
+  });
+
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] px-4 py-12 text-center">
+      <div className="mb-6 p-4 bg-red-50 rounded-full">
+        <AlertCircle className="h-12 w-12 text-red-500" />
+      </div>
+      <h2 className="text-xl font-bold text-gray-900 mb-2">API Error</h2>
+      <p className="text-sm text-muted-foreground mb-2">
+        {customMessage || 'There was an issue communicating with our servers.'}
+      </p>
+      <p className="text-sm text-muted-foreground mb-6 max-w-md">
+        {error.message}
+      </p>
+      <div className="flex flex-wrap justify-center gap-3 mb-6">
+        <Button 
+          onClick={resetErrorBoundary}
+          variant="default"
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Retry
+        </Button>
+        {showGoHome && (
+          <Button 
+            onClick={handleGoHome}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Go Home
+          </Button>
+        )}
+        {showGoBack && (
+          <Button 
+            onClick={handleGoBack}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Go Back
+          </Button>
+        )}
+      </div>
+      <div className="text-xs text-gray-500 bg-gray-50 p-4 rounded-lg w-full max-w-md overflow-auto">
+        <details>
+          <summary className="cursor-pointer mb-2">Technical Details</summary>
+          <pre className="text-left whitespace-pre-wrap break-words">
+            {error.stack || 'No stack trace available'}
+          </pre>
+        </details>
+      </div>
+    </div>
+  );
+};
+
+export const ApiErrorBoundary: React.FC<ApiErrorBoundaryProps> = ({
+  children,
+  fallback: CustomFallback,
+  onError = (error, errorInfo) => {
+    // Default error handling
+    debug.error('ApiErrorBoundary', 'API error caught', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    });
+  },
+  showGoHome = false,
+  showGoBack = false,
+  customMessage,
+}) => {
+  const FallbackComponent = CustomFallback || ((props: FallbackProps) => (
+    <ApiErrorFallback 
+      {...props} 
+      showGoHome={showGoHome}
+      showGoBack={showGoBack}
+      customMessage={customMessage}
+    />
+  ));
+
+  return (
+    <ReactErrorBoundary
+      FallbackComponent={FallbackComponent}
+      onError={onError}
+      onReset={() => {
+        // Reset any state if needed
+      }}
+    >
+      {children}
+    </ReactErrorBoundary>
+  );
+};
+
+export default ApiErrorBoundary;

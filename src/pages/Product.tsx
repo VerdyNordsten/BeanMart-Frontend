@@ -139,7 +139,7 @@ export default function ProductPage() {
     if (roastFilterSlug) params.set('roast', roastFilterSlug);
     if (weightFilter) params.set('weight', weightFilter);
     if (currentPage > 1) params.set('page', currentPage.toString());
-    return `/products${params.toString() ? '?' + params.toString() : ''}`;
+    return `/products${params.toString() ? `?${  params.toString()}` : ''}`;
   };
 
   return (

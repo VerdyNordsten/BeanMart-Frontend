@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/auth";
 import { categoriesApi } from "@/lib/api";
 import { CategoryForm } from "@/features/admin/CategoryForm";
-import type { Category } from "@/types/product";
+import type { Category } from "@/types";
 
 export default function AdminCategories() {
   const { toast } = useToast();
@@ -44,8 +44,8 @@ export default function AdminCategories() {
         description: 'Category deleted successfully',
       });
     },
-    onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete category';
+    onError: (deleteError: unknown) => {
+      const errorMessage = deleteError instanceof Error ? deleteError.message : 'Failed to delete category';
       toast({
         title: 'Error',
         description: errorMessage,

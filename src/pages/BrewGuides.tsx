@@ -1,86 +1,22 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
-import { Badge } from "@/ui/badge";
+import { Card, CardContent } from "@/ui/card";
 import { Button } from "@/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { 
   Coffee, 
-  Clock, 
   Thermometer, 
   Droplets, 
   Scale, 
   Timer,
-  Play,
-  BookOpen,
   Star,
-  Users
+  BookOpen
 } from "lucide-react";
+import { BrewGuidesHero } from "@/features/brew-guides/BrewGuidesHero";
+import { BrewMethodSelector } from "@/features/brew-guides/BrewMethodSelector";
+import { BrewGuideSidebar } from "@/features/brew-guides/BrewGuideSidebar";
+import { BrewStepCard } from "@/features/brew-guides/BrewStepCard";
 
 export default function BrewGuides() {
   const [selectedMethod, setSelectedMethod] = useState('pour-over');
-
-  const brewMethods = [
-    {
-      id: 'pour-over',
-      name: 'Pour Over',
-      icon: Droplets,
-      difficulty: 'Intermediate',
-      time: '4-5 min',
-      description: 'The classic method for clean, bright coffee with full control over extraction',
-      color: 'bg-blue-50 border-blue-200 text-blue-800',
-      popularity: 95,
-    },
-    {
-      id: 'french-press',
-      name: 'French Press',
-      icon: Coffee,
-      difficulty: 'Beginner',
-      time: '4-6 min',
-      description: 'Simple immersion brewing that produces rich, full-bodied coffee',
-      color: 'bg-green-50 border-green-200 text-green-800',
-      popularity: 88,
-    },
-    {
-      id: 'espresso',
-      name: 'Espresso',
-      icon: Coffee,
-      difficulty: 'Advanced',
-      time: '2-3 min',
-      description: 'Intense, concentrated coffee with a rich crema layer',
-      color: 'bg-red-50 border-red-200 text-red-800',
-      popularity: 92,
-    },
-    {
-      id: 'aeropress',
-      name: 'AeroPress',
-      icon: Coffee,
-      difficulty: 'Beginner',
-      time: '2-3 min',
-      description: 'Versatile brewing method that can produce both espresso-like and filter coffee',
-      color: 'bg-purple-50 border-purple-200 text-purple-800',
-      popularity: 85,
-    },
-    {
-      id: 'cold-brew',
-      name: 'Cold Brew',
-      icon: Coffee,
-      difficulty: 'Beginner',
-      time: '12-24 hours',
-      description: 'Smooth, low-acid coffee perfect for hot summer days',
-      color: 'bg-cyan-50 border-cyan-200 text-cyan-800',
-      popularity: 78,
-    },
-    {
-      id: 'moka-pot',
-      name: 'Moka Pot',
-      icon: Coffee,
-      difficulty: 'Intermediate',
-      time: '5-7 min',
-      description: 'Stovetop brewing that produces strong, espresso-like coffee',
-      color: 'bg-orange-50 border-orange-200 text-orange-800',
-      popularity: 72,
-    },
-  ];
 
   const brewGuides = {
     'pour-over': {
@@ -279,90 +215,13 @@ export default function BrewGuides() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/20 to-background">
       {/* Hero Section */}
-      <section className="py-16 bg-gradient-to-r from-coffee-dark to-coffee-medium text-cream">
-        <div className="container max-w-screen-2xl">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="font-display text-5xl md:text-6xl font-bold mb-6">
-              Brew Guides
-            </h1>
-            <p className="text-xl md:text-2xl text-cream/90 mb-8">
-              Master the art of coffee brewing with our comprehensive guides. 
-              From beginner-friendly methods to advanced techniques.
-            </p>
-            <div className="flex items-center justify-center gap-8 text-cream/80">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                <span>6 Methods</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                <span>Expert Tips</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5" />
-                <span>Proven Techniques</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <BrewGuidesHero />
 
       {/* Brew Methods Selection */}
-      <section className="py-16">
-        <div className="container max-w-screen-2xl">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-4xl font-bold text-coffee-dark mb-4">
-              Choose Your Brew Method
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Each method offers a unique flavor profile and brewing experience
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {brewMethods.map((method) => {
-              const IconComponent = method.icon;
-              return (
-                <Card
-                  key={method.id}
-                  className={`group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 ${
-                    selectedMethod === method.id ? 'ring-2 ring-coffee-medium' : ''
-                  }`}
-                  onClick={() => setSelectedMethod(method.id)}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <IconComponent className="h-8 w-8 text-coffee-medium" />
-                      <Badge className={method.color}>
-                        {method.difficulty}
-                      </Badge>
-                    </div>
-                    
-                    <h3 className="font-display text-xl font-bold text-coffee-dark mb-2">
-                      {method.name}
-                    </h3>
-                    
-                    <p className="text-muted-foreground mb-4">
-                      {method.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{method.time}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4" />
-                        <span>{method.popularity}%</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <BrewMethodSelector 
+        selectedMethod={selectedMethod}
+        onMethodChange={setSelectedMethod}
+      />
 
       {/* Brew Guide Details */}
       {currentGuide && (
@@ -376,104 +235,14 @@ export default function BrewGuides() {
                 </h3>
                 
                 <div className="space-y-6">
-                  {currentGuide.steps.map((step) => {
-                    const IconComponent = step.icon;
-                    return (
-                      <Card key={step.step} className="group hover:shadow-lg transition-all duration-300">
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                              <div className="w-12 h-12 bg-coffee-medium text-white rounded-full flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform duration-300">
-                                {step.step}
-                              </div>
-                            </div>
-                            
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <IconComponent className="h-5 w-5 text-coffee-medium" />
-                                <h4 className="font-display text-xl font-semibold text-coffee-dark">
-                                  {step.title}
-                                </h4>
-                                <Badge variant="outline" className="ml-auto">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {step.time}
-                                </Badge>
-                              </div>
-                              
-                              <p className="text-coffee-dark font-medium mb-2">
-                                {step.description}
-                              </p>
-                              
-                              <p className="text-muted-foreground">
-                                {step.details}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                  {currentGuide.steps.map((step) => (
+                    <BrewStepCard key={step.step} step={step} />
+                  ))}
                 </div>
               </div>
 
               {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Tips */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Star className="h-5 w-5 text-caramel" />
-                      Pro Tips
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {currentGuide.tips.map((tip, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-caramel rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{tip}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-
-                {/* Equipment */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Coffee className="h-5 w-5 text-coffee-medium" />
-                      Equipment Needed
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {currentGuide.equipment.map((item, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-coffee-medium rounded-full" />
-                          <span className="text-sm text-muted-foreground">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Start */}
-                <Card className="bg-gradient-to-br from-coffee-medium to-coffee-dark text-cream">
-                  <CardContent className="p-6">
-                    <h4 className="font-display text-lg font-bold mb-3">
-                      Ready to Start?
-                    </h4>
-                    <p className="text-cream/90 text-sm mb-4">
-                      Get the perfect coffee beans for this brewing method.
-                    </p>
-                    <Button variant="caramel" className="w-full">
-                      <Play className="h-4 w-4 mr-2" />
-                      Shop Coffee Beans
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+              <BrewGuideSidebar guide={currentGuide} />
             </div>
           </div>
         </section>

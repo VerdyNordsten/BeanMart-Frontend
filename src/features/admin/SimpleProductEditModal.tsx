@@ -5,10 +5,10 @@ import { Button } from "@/ui/button";
 import { Loader2 } from "lucide-react";
 import { productsApi } from "@/lib/api";
 import { ProductForm } from "./ProductForm";
-import type { Product } from "@/types/product";
+import type { ProductWithRelations } from "@/types";
 
 interface SimpleProductEditModalProps {
-  product: Product;
+  product: ProductWithRelations;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -27,7 +27,7 @@ export function SimpleProductEditModal({ product, onClose, onSuccess }: SimplePr
       const response = await productsApi.getProduct(product.id);
       return response;
     },
-    enabled: !!product.id,
+    enabled: Boolean(product.id),
   });
 
   const handleClose = () => {

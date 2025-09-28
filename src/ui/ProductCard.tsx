@@ -2,12 +2,12 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Card, CardContent } from "@/ui/card";
-import { Product } from "@/types/product";
+import { ProductWithRelations } from "@/types";
 import { Star, Package } from "lucide-react";
 import { formatPrice, formatPriceRange } from "@/utils/currency";
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductWithRelations;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
@@ -21,9 +21,8 @@ export function ProductCard({ product }: ProductCardProps) {
     weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
   })) || [];
   
-  // Get the first image from the first variant or product images
-  const primaryImage = activeVariants[0]?.images?.[0]?.url || 
-                      (product.images && product.images.length > 0 ? product.images[0].url : '');
+  // Get the first image from the first variant
+  const primaryImage = activeVariants[0]?.images?.[0]?.url || '';
   
   // Calculate price range from variants
   const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => v.price)) : product.price_min;

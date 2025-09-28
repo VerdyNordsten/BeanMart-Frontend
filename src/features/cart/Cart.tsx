@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { useCartStore } from "@/lib/cart";
 import { Button } from "@/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
+import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
-import { Separator } from "@/ui/separator";
 import { ScrollArea } from "@/ui/scroll-area";
 import { Input } from "@/ui/input";
 import { 
@@ -74,9 +72,9 @@ export function Cart() {
                     <div className="flex gap-3">
                       {/* Product Image */}
                       <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
-                        {item.product.images && item.product.images.length > 0 ? (
+                        {item.variant.images && item.variant.images.length > 0 ? (
                           <img
-                            src={item.product.images[0].url}
+                            src={item.variant.images[0].url}
                             alt={item.product.name}
                             className="h-full w-full object-cover"
                           />

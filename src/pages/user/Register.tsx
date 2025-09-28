@@ -73,7 +73,7 @@ export default function UserRegister() {
         });
       } else if (apiError.details) {
         // Set field-specific errors
-        Object.entries(apiError.details).forEach(([field, messages]) => {
+        Object.entries(apiError.details).forEach(([_field, _messages]) => {
           // Note: We can't set form errors here since the form is in the RegisterForm component
           // The error handling will be done through toast notifications instead
         });

@@ -3,10 +3,10 @@ import { Input } from "@/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
 import { formatPrice } from "@/utils/currency";
 import { ShoppingCart, Share2, Heart, Minus, Plus } from "lucide-react";
-import { Product, ProductVariant } from "@/types/product";
+import { ProductWithRelations, ProductVariant } from "@/types";
 
 interface ProductActionsProps {
-  product: Product;
+  product: ProductWithRelations;
   selectedVariant: ProductVariant | null;
   quantity: number;
   hasMultipleVariants: boolean;

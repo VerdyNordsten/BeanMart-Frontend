@@ -1,14 +1,14 @@
 interface ProductForStructuredData {
   name: string;
-  images?: Array<{ image_url: string }>;
-  short_description: string;
-  price_min: number;
-  price_max: number;
-  variants?: Array<{ stock_quantity: number }>;
+  short_description?: string | null;
+  variants?: Array<{ 
+    stock: number;
+    images?: Array<{ url: string }>;
+  }>;
   rating?: number;
   review_count?: number;
   categories?: Array<{ name: string }>;
-  roastLevels?: Array<{ name: string }>;
+  roast_levels?: Array<{ name: string }>;
 }
 
 // Helper function to generate product structured data
@@ -17,7 +17,7 @@ export function generateProductStructuredData(product: ProductForStructuredData)
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.name,
-    "image": product.images?.map(img => `https://beanmart.com${img.image_url}`) || [],
+    "image": product.variants?.[0]?.images?.map(img => `https://beanmart.com${img.url}`) || [],
     "description": product.short_description,
     "brand": {
       "@type": "Brand",
@@ -25,10 +25,8 @@ export function generateProductStructuredData(product: ProductForStructuredData)
     },
     "offers": {
       "@type": "AggregateOffer",
-      "lowPrice": product.price_min,
-      "highPrice": product.price_max,
       "priceCurrency": "USD",
-      "availability": product.variants?.some(v => v.stock_quantity > 0) 
+      "availability": product.variants?.some(v => v.stock > 0) 
         ? "https://schema.org/InStock" 
         : "https://schema.org/OutOfStock"
     },
@@ -39,7 +37,7 @@ export function generateProductStructuredData(product: ProductForStructuredData)
     } : undefined,
     "category": product.categories?.map(cat => cat.name).join(", "),
     "additionalProperty": [
-      ...(product.roastLevels?.map(roast => ({
+      ...(product.roast_levels?.map(roast => ({
         "@type": "PropertyValue",
         "name": "Roast Level",
         "value": roast.name

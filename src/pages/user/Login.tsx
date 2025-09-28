@@ -10,7 +10,7 @@ import { LoginForm, type LoginFormData } from "@/features/auth/LoginForm";
 
 export default function UserLogin() {
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAuthenticated, isAdmin: isUserAdmin, setAuth } = useAuthStore();
+  const { isAuthenticated, isAdmin: isUserAdmin, setAuth } = useAuthStore();
   const { toast } = useToast();
 
   // Redirect if already authenticated
@@ -99,7 +99,7 @@ export default function UserLogin() {
         });
       } else if (apiError.details) {
         // Set field-specific errors
-        Object.entries(apiError.details).forEach(([field, messages]) => {
+        Object.entries(apiError.details).forEach(([_field, _messages]) => {
           // Note: We can't set form errors here since the form is in the LoginForm component
           // The error handling will be done through toast notifications instead
         });

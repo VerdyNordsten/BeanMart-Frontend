@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ordersApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Order } from "@/types/product";
+import { Order } from "@/types";
 import { OrdersHeader } from "@/features/user/orders/OrdersHeader";
 import { OrdersList } from "@/features/user/orders/OrdersList";
 import { OrderDetailsSheet } from "@/features/user/orders/OrderDetailsSheet";
@@ -55,8 +55,8 @@ export default function UserOrders() {
       } else {
         throw new Error(response.message || "Failed to load order details");
       }
-    } catch (error) {
-      console.error('Failed to load order details:', error);
+    } catch (loadError) {
+      console.error('Failed to load order details:', loadError);
       toast({
         title: "Error",
         description: "Failed to load order details. Please try again.",

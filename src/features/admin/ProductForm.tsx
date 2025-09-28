@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { productsApi, productVariantsApi, variantImagesApi, categoriesApi, roastLevelsApi, productRelationsApi } from "@/lib/api";
 import { ImageUpload } from "./ImageUpload";
-import type { Product, ProductFormData, Category, RoastLevel } from "@/types/product";
+import type { ProductWithRelations, Category, RoastLevel } from "@/types";
 
 // Validation schema
 const productSchema = z.object({
@@ -46,14 +46,14 @@ const productSchema = z.object({
 type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
-  product?: Product;
+  product?: ProductWithRelations;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) {
   const { toast } = useToast();
-  const isEditing = !!product;
+  const isEditing = Boolean(product);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -126,7 +126,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           is_active: product.is_active,
         },
         categories: product.categories?.map((cat: { category_id?: string; id?: string }) => cat.category_id || cat.id || "") || [],
-        roastLevels: product.roastLevels?.map((roast: { roast_level_id?: string; id?: string }) => roast.roast_level_id || roast.id || "") || [],
+        roastLevels: product.roast_levels?.map((roast: { roast_level_id?: string; id?: string }) => roast.roast_level_id || roast.id || "") || [],
         variants: product.variants?.map(variant => ({
           id: variant.id,
           price: Number(variant.price),

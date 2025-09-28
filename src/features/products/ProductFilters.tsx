@@ -3,7 +3,7 @@ import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
 import { Card, CardContent } from "@/ui/card";
-import { Category, RoastLevel } from "@/types/product";
+import { Category, RoastLevel } from "@/types";
 import { Search, X } from "lucide-react";
 
 interface ProductFiltersProps {

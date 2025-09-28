@@ -1,5 +1,5 @@
 import { OrderCard } from "./OrderCard";
-import { Order } from "@/types/product";
+import { Order } from "@/types";
 import { LoadingCard } from "@/shared/LoadingCard";
 import { EmptyState } from "@/shared/EmptyState";
 import { ErrorState } from "@/shared/ErrorState";

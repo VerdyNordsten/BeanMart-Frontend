@@ -2,10 +2,10 @@ import { Badge } from "@/ui/badge";
 import { formatPrice } from "@/utils/currency";
 import { formatDescription } from "@/utils/textFormatter";
 import { Star } from "lucide-react";
-import { Product, ProductVariant } from "@/types/product";
+import { ProductWithRelations, ProductVariant } from "@/types";
 
 interface ProductInfoProps {
-  product: Product;
+  product: ProductWithRelations;
   selectedVariant: ProductVariant | null;
   hasPriceRange: boolean;
 }
@@ -39,7 +39,7 @@ export function ProductInfo({ product, selectedVariant, hasPriceRange }: Product
         <div className="flex items-center gap-2">
           <span className="text-3xl font-bold text-green-600">
             {selectedVariant ? formatPrice(selectedVariant.price, 'USD') : 
-             hasPriceRange ? formatPrice(product.price_min || 0, 'USD') + ' - ' + formatPrice(product.price_max || 0, 'USD') : 
+             hasPriceRange ? `${formatPrice(product.price_min || 0, 'USD')  } - ${  formatPrice(product.price_max || 0, 'USD')}` : 
              formatPrice(product.price_min || 0, 'USD')}
           </span>
         </div>

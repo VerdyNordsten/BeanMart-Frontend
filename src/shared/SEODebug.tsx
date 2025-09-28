@@ -22,7 +22,7 @@ export function SEODebug({ enabled = process.env.NODE_ENV === 'development' }: S
     if (!enabled) return;
 
     const updateSEOData = () => {
-      const title = document.title;
+      const {title} = document;
       const description = document.querySelector('meta[name="description"]')?.getAttribute('content');
       const keywords = document.querySelector('meta[name="keywords"]')?.getAttribute('content');
       const ogTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content');
@@ -80,14 +80,14 @@ export function SEODebug({ enabled = process.env.NODE_ENV === 'development' }: S
       zIndex: 9999,
       opacity: 0.9
     }}>
-      <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>SEO Debug Info</div>
+      {/* <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>SEO Debug Info</div>
       <div><strong>Title:</strong> {seoData.title}</div>
       <div><strong>Description:</strong> {seoData.description?.substring(0, 100)}...</div>
       <div><strong>Keywords:</strong> {seoData.keywords?.substring(0, 50)}...</div>
       <div><strong>OG Title:</strong> {seoData.ogTitle}</div>
       <div><strong>OG Image:</strong> {seoData.ogImage}</div>
       <div><strong>Canonical:</strong> {seoData.canonical}</div>
-      <div><strong>Structured Data:</strong> {seoData.structuredData?.length || 0} items</div>
+      <div><strong>Structured Data:</strong> {seoData.structuredData?.length || 0} items</div> */}
     </div>
   );
 }

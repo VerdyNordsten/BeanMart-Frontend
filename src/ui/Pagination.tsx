@@ -115,7 +115,7 @@ interface PaginationInfoProps {
 
 export function PaginationInfo({ 
   currentPage, 
-  totalPages, 
+  totalPages: _totalPages, 
   totalItems, 
   itemsPerPage, 
   className 

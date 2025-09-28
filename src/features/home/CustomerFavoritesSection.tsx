@@ -1,10 +1,10 @@
 import { Card, CardContent } from "@/ui/card";
 import { Skeleton } from "@/ui/skeleton";
 import { ProductCard } from "@/ui/ProductCard";
-import { Product } from "@/types/product";
+import { ProductWithRelations } from "@/types";
 
 interface CustomerFavoritesSectionProps {
-  products: Product[];
+  products: ProductWithRelations[];
   loading: boolean;
 }
 

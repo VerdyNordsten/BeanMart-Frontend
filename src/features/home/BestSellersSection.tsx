@@ -3,7 +3,7 @@ import { Button } from "@/ui/button";
 import { Card, CardContent } from "@/ui/card";
 import { Skeleton } from "@/ui/skeleton";
 import { ProductCard } from "@/ui/ProductCard";
-import { Product } from "@/types/product";
+import { Product } from "@/types";
 import { ArrowRight } from "lucide-react";
 
 interface BestSellersSectionProps {

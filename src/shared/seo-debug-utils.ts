@@ -2,7 +2,7 @@
 export function checkSEOHealth() {
   const issues = [];
   
-  const title = document.title;
+  const {title} = document;
   const description = document.querySelector('meta[name="description"]')?.getAttribute('content');
   const h1Elements = document.querySelectorAll('h1');
   const images = document.querySelectorAll('img:not([alt])');

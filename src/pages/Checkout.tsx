@@ -5,6 +5,7 @@ import { useAuthStore } from "@/lib/auth";
 import { ordersApi, userAddressesApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { logger } from "@/utils/logger";
 import { CheckoutHeader } from "@/features/checkout/CheckoutHeader";
 import { ShippingAddressForm } from "@/features/checkout/ShippingAddressForm";
 import { PaymentMethodForm } from "@/features/checkout/PaymentMethodForm";
@@ -14,7 +15,7 @@ import { OrderSummary } from "@/features/checkout/OrderSummary";
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
-  const { items, getTotalItems, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
   
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [shippingAddress, setShippingAddress] = useState({
@@ -65,7 +66,7 @@ export default function Checkout() {
         setShippingAddress({
           fullName: defaultAddress.recipient_name || "",
           phone: defaultAddress.phone || "",
-          address: `${defaultAddress.address_line1}${defaultAddress.address_line2 ? ', ' + defaultAddress.address_line2 : ''}`,
+          address: `${defaultAddress.address_line1}${defaultAddress.address_line2 ? `, ${  defaultAddress.address_line2}` : ''}`,
           city: defaultAddress.city || "",
           state: defaultAddress.state || "",
           postalCode: defaultAddress.postal_code || "",
@@ -89,7 +90,7 @@ export default function Checkout() {
       setShippingAddress({
         fullName: selectedAddress.recipient_name || "",
         phone: selectedAddress.phone || "",
-        address: `${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}`,
+        address: `${selectedAddress.address_line1}${selectedAddress.address_line2 ? `, ${  selectedAddress.address_line2}` : ''}`,
         city: selectedAddress.city || "",
         state: selectedAddress.state || "",
         postalCode: selectedAddress.postal_code || "",
@@ -102,6 +103,11 @@ export default function Checkout() {
   const handleShippingAddressChange = (field: keyof typeof shippingAddress, value: string) => {
     setShippingAddress(prev => ({ ...prev, [field]: value }));
   };
+
+  // Calculate shipping and totals
+  const subtotal = getTotalPrice();
+  const shipping = 5; // Fixed shipping cost
+  const total = subtotal + shipping;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,21 +145,9 @@ export default function Checkout() {
         shippingCost: shipping
       };
 
-      console.log('Order data being sent:', orderData);
-      console.log('Order data types:', {
-        items: orderData.items.map(item => ({
-          productVariantId: typeof item.productVariantId,
-          quantity: typeof item.quantity,
-          pricePerUnit: typeof item.pricePerUnit,
-          totalPrice: typeof item.totalPrice
-        }))
-      });
-
       // Call actual order creation API
       const response = await ordersApi.createOrder(orderData);
-      
-      console.log('Order creation response:', response);
-      
+    
       if (response.success) {
         toast.success('Order placed successfully!');
         clearCart();
@@ -163,7 +157,7 @@ export default function Checkout() {
       }
       
     } catch (error) {
-      console.error('Checkout error:', error);
+      logger.error('Checkout error', { error });
       toast.error('Failed to place order. Please try again.');
     } finally {
       setLoading(false);
@@ -177,12 +171,6 @@ export default function Checkout() {
   if (items.length === 0) {
     return null; // Will redirect
   }
-
-  const subtotal = getTotalPrice();
-  const shipping = 5; // Fixed shipping cost
-  const total = subtotal + shipping;
-  
-  console.log('Price calculations:', { subtotal, shipping, total });
 
   return (
     <div className="container mx-auto px-4 py-8">

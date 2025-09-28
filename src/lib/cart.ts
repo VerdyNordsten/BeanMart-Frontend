@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Product, ProductVariant } from "@/types/product";
+import { ProductWithRelations, ProductVariant } from "@/types";
 
 export interface CartItem {
   id: string;
-  product: Product;
+  product: ProductWithRelations;
   variant: ProductVariant;
   quantity: number;
   price: number;
@@ -15,7 +15,7 @@ interface CartState {
   isOpen: boolean;
   
   // Actions
-  addItem: (product: Product, variant: ProductVariant, quantity: number) => void;
+  addItem: (product: ProductWithRelations, variant: ProductVariant, quantity: number) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -35,7 +35,7 @@ export const useCartStore = create<CartState>()(
       items: [],
       isOpen: false,
       
-      addItem: (product: Product, variant: ProductVariant, quantity: number) => {
+      addItem: (product: ProductWithRelations, variant: ProductVariant, quantity: number) => {
         const itemId = `${product.id}-${variant.id}`;
         const existingItem = get().items.find(item => item.id === itemId);
         

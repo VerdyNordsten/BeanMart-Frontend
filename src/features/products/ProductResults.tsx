@@ -5,12 +5,12 @@ import { Skeleton } from "@/ui/skeleton";
 import { ProductGrid } from "@/ui/ProductGrid";
 import { Pagination, PaginationInfo } from "@/ui/Pagination";
 import { Filter } from "lucide-react";
-import { ProductsResponse } from "@/types/product";
+import { GetProductsResponse } from "@/types";
 
 interface ProductResultsProps {
   loading: boolean;
   error: string | Error | null;
-  productsData: ProductsResponse | null;
+  productsData: GetProductsResponse | null;
   activeFiltersCount: number;
   onRetry: () => void;
   onClearFilters: () => void;

@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { variantImagesApi } from "@/lib/api";
-import type { VariantImage } from "@/types/product";
 
 interface ImageUploadProps {
   images: Array<{

@@ -46,7 +46,7 @@ interface ShippingAddressFormProps {
 export function ShippingAddressForm({
   addresses,
   hasAddresses,
-  addressesLoading,
+  addressesLoading: _addressesLoading,
   addressesError,
   useExistingAddress,
   selectedAddressId,

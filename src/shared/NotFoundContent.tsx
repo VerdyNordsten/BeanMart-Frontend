@@ -5,7 +5,7 @@ interface NotFoundContentProps {
   pathname: string;
 }
 
-export function NotFoundContent({ pathname }: NotFoundContentProps) {
+export function NotFoundContent({ pathname: _pathname }: NotFoundContentProps) {
   return (
     <div className="text-center max-w-md mx-auto px-4">
       <Coffee className="h-16 w-16 text-coffee-medium mx-auto mb-6" />

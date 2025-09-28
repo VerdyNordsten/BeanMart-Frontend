@@ -14,7 +14,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/ui/table";
-import { AlertCircle } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +30,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ordersApi } from "@/lib/api";
 import { formatAPIError } from "@/lib/api-client";
+import { OrderWithItemsAndProducts, OrderStatus } from "@/types";
 import { 
+  AlertCircle,
   Search, 
   MoreHorizontal, 
   Eye, 
@@ -42,7 +43,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-const statusConfig = {
+const statusConfig: Record<OrderStatus, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-500 text-white' },
   confirmed: { label: 'Confirmed', icon: CheckCircle, color: 'bg-blue-500 text-white' },
   shipped: { label: 'Shipped', icon: Truck, color: 'bg-purple-500 text-white' },
@@ -54,37 +55,7 @@ export default function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "");
-  const [selectedOrder, setSelectedOrder] = useState<{
-    id: string;
-    order_number: string;
-    status: string;
-    total_amount: string | number;
-    created_at: string;
-    user_id: string;
-    shipping_address: { 
-      fullName: string; 
-      address: string; 
-      city: string; 
-      state: string; 
-      postalCode: string; 
-      phone: string; 
-    };
-    billing_address: { 
-      fullName: string; 
-      address: string; 
-      city: string; 
-      state: string; 
-      postalCode: string; 
-      phone: string; 
-    };
-    items: Array<{ 
-      product_name: string; 
-      quantity: number; 
-      price_per_unit: string; 
-      total_price: string;
-      product_image?: string;
-    }>;
-  } | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithItemsAndProducts | null>(null);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   
   const { toast } = useToast();
@@ -118,8 +89,8 @@ export default function AdminOrders() {
         description: "The order status has been successfully updated.",
       });
     },
-    onError: (error) => {
-      const apiError = formatAPIError(error);
+    onError: (updateError) => {
+      const apiError = formatAPIError(updateError);
       toast({
         title: "Update failed",
         description: apiError.message,
@@ -169,9 +140,9 @@ export default function AdminOrders() {
       } else {
         throw new Error(response.message || "Failed to load order details");
       }
-    } catch (error) {
-      console.error('Failed to load order details:', error);
-      const apiError = formatAPIError(error);
+    } catch (loadError) {
+      console.error('Failed to load order details:', loadError);
+      const apiError = formatAPIError(loadError);
       toast({
         title: "Failed to load order",
         description: apiError.message,

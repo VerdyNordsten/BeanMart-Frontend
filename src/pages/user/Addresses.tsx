@@ -10,28 +10,13 @@ import { userAddressesApi } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/ui/dialog";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
-import { Textarea } from "@/ui/textarea";
-
-interface Address {
-  id: string;
-  user_id: string;
-  label: string;
-  recipient_name: string;
-  phone: string;
-  address_line1: string;
-  address_line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  is_default: boolean;
-  created_at: string;
-}
+// import { Textarea } from "@/ui/textarea";
+import { UserAddress } from "@/types";
 
 export default function UserAddresses() {
   const { user, token } = useAuthStore();
   const { toast } = useToast();
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
