@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { productsApi } from '@/lib/api';
+import { useState, useEffect } from "react";
+import { productsApi } from "@/lib/api";
+import { Product } from "@/types/product";
 
 interface CachedData<T> {
   data: T;
@@ -10,7 +11,7 @@ interface CachedData<T> {
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 export function useCachedProducts(limit: number, cacheKey: string) {
-  const [data, setData] = useState<any[] | null>(null);
+  const [data, setData] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -58,7 +59,7 @@ export function useCachedProducts(limit: number, cacheKey: string) {
   return { data, loading, error };
 }
 
-function getCachedData(key: string): CachedData<any[]> | null {
+function getCachedData(key: string): CachedData<Product[]> | null {
   try {
     const cached = localStorage.getItem(`products_${key}`);
     return cached ? JSON.parse(cached) : null;
@@ -67,9 +68,9 @@ function getCachedData(key: string): CachedData<any[]> | null {
   }
 }
 
-function setCachedData(key: string, data: any[]): void {
+function setCachedData(key: string, data: Product[]): void {
   try {
-    const cacheData: CachedData<any[]> = {
+    const cacheData: CachedData<Product[]> = {
       data,
       timestamp: Date.now(),
       expiry: Date.now() + CACHE_DURATION
@@ -80,7 +81,7 @@ function setCachedData(key: string, data: any[]): void {
   }
 }
 
-function isExpired(cachedData: CachedData<any[]>): boolean {
+function isExpired(cachedData: CachedData<Product[]>): boolean {
   return Date.now() > cachedData.expiry;
 }
 
@@ -97,5 +98,5 @@ export function clearProductsCache(): void {
 
 // Make it available globally for debugging
 if (typeof window !== 'undefined') {
-  (window as any).clearProductsCache = clearProductsCache;
+  (window as Window & { clearProductsCache?: () => void }).clearProductsCache = clearProductsCache;
 }

@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "@/lib/auth";
 import { ordersApi, userAddressesApi } from "@/lib/api";
-import { DashboardHeader } from '@/components/user/dashboard/DashboardHeader';
-import { StatsCards } from '@/components/user/dashboard/StatsCards';
-import { RecentOrders } from '@/components/user/dashboard/RecentOrders';
-import { AccountInfo } from '@/components/user/dashboard/AccountInfo';
+import { DashboardHeader } from "@/features/user/dashboard/DashboardHeader";
+import { StatsCards } from "@/features/user/dashboard/StatsCards";
+import { RecentOrders } from "@/features/user/dashboard/RecentOrders";
+import { AccountInfo } from "@/features/user/dashboard/AccountInfo";
 
 interface Order {
   id: string;

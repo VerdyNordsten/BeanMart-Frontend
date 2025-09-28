@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import { Badge } from "@/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/select";
 import { 
   Table, 
   TableBody, 
@@ -13,24 +13,24 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from '@/components/ui/table';
-import { AlertCircle } from 'lucide-react';
+} from "@/ui/table";
+import { AlertCircle } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/ui/dropdown-menu";
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
   DialogDescription 
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { ordersApi } from '@/lib/api';
-import { formatAPIError } from '@/lib/api-client';
+} from "@/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { ordersApi } from "@/lib/api";
+import { formatAPIError } from "@/lib/api-client";
 import { 
   Search, 
   MoreHorizontal, 
@@ -40,7 +40,7 @@ import {
   CheckCircle,
   Truck,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
 const statusConfig = {
   pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-500 text-white' },
@@ -52,8 +52,8 @@ const statusConfig = {
 
 export default function AdminOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || "");
   const [selectedOrder, setSelectedOrder] = useState<{
     id: string;
     order_number: string;
@@ -90,8 +90,8 @@ export default function AdminOrders() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '10');
+  const page = parseInt(searchParams.get('page') || "1");
+  const limit = parseInt(searchParams.get('limit') || "10");
 
   // Fetch orders
   const { data: ordersData, isLoading, error } = useQuery({
@@ -256,7 +256,7 @@ export default function AdminOrders() {
               </Button>
             </form>
             
-            <Select value={statusFilter || 'all'} onValueChange={handleStatusFilter}>
+            <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
@@ -337,7 +337,7 @@ export default function AdminOrders() {
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {orderData.shipping_address?.fullName || 'Unknown Customer'}
+                              {orderData.shipping_address?.fullName || "Unknown Customer"}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {orderData.shipping_address?.phone}
@@ -354,7 +354,7 @@ export default function AdminOrders() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Badge className={statusInfo?.color || 'bg-gray-500 text-white'}>
+                            <Badge className={statusInfo?.color || "bg-gray-500 text-white"}>
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {statusInfo?.label || orderData.status}
                             </Badge>
@@ -481,7 +481,7 @@ export default function AdminOrders() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <div className="text-sm text-muted-foreground">Order Number</div>
-                            <div className="font-mono">{selectedOrder.order_number || 'N/A'}</div>
+                            <div className="font-mono">{selectedOrder.order_number || "N/A"}</div>
                           </div>
                           <div>
                             <div className="text-sm text-muted-foreground">Date</div>
@@ -515,11 +515,11 @@ export default function AdminOrders() {
                         <div className="space-y-2">
                           <div>
                             <span className="text-sm text-muted-foreground">Name: </span>
-                            <span>{selectedOrder.shipping_address?.fullName || 'N/A'}</span>
+                            <span>{selectedOrder.shipping_address?.fullName || "N/A"}</span>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Phone: </span>
-                            <span>{selectedOrder.shipping_address?.phone || 'N/A'}</span>
+                            <span>{selectedOrder.shipping_address?.phone || "N/A"}</span>
                           </div>
                         </div>
                       </CardContent>

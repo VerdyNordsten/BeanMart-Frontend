@@ -4,12 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuthStore } from "@/lib/auth";
 import { usersApi, authApi } from "@/lib/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui/form";
+import { Separator } from "@/ui/separator";
+
 import { User, Mail, Phone, Calendar } from "lucide-react";
 
 const profileFormSchema = z.object({
@@ -105,7 +106,7 @@ export default function UserProfile() {
           full_name: data.full_name,
           email: data.email,
           phone: data.phone,
-          role: user?.role || 'user' as 'admin' | 'user',
+          role: user?.role || "user" as 'admin' | 'user',
           is_active: user?.is_active !== undefined ? user.is_active : true
         };
         setAuth(updatedUser, token);

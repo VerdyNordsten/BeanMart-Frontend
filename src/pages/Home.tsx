@@ -1,11 +1,13 @@
-import { SEO, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { useCachedProducts } from '@/hooks/useCachedProducts';
-import { HeroSection } from '@/components/home/HeroSection';
-import { BestSellersSection } from '@/components/home/BestSellersSection';
-import { RoastFeaturesSection } from '@/components/home/RoastFeaturesSection';
-import { FarmToCupSection } from '@/components/home/FarmToCupSection';
-import { CustomerFavoritesSection } from '@/components/home/CustomerFavoritesSection';
-import { NewsletterSection } from '@/components/home/NewsletterSection';
+import { SEO } from "@/shared/SEO";
+import { generateBreadcrumbStructuredData } from "@/shared/seo-utils";
+import { useCachedProducts } from "@/hooks/useCachedProducts";
+import { HeroSection } from "@/features/home/HeroSection";
+import { BestSellersSection } from "@/features/home/BestSellersSection";
+import { RoastFeaturesSection } from "@/features/home/RoastFeaturesSection";
+import { FarmToCupSection } from "@/features/home/FarmToCupSection";
+import { CustomerFavoritesSection } from "@/features/home/CustomerFavoritesSection";
+import { NewsletterSection } from "@/features/home/NewsletterSection";
+import { Product } from "@/types/product";
 
 // Transform API data to match frontend Product interface
 interface ApiProduct {
@@ -67,8 +69,8 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     id: apiProduct.id,
     slug: apiProduct.slug,
     name: apiProduct.name,
-    short_description: apiProduct.short_description || '',
-    long_description: apiProduct.long_description || '',
+    short_description: apiProduct.short_description || "",
+    long_description: apiProduct.long_description || "",
     currency: apiProduct.currency,
     price_min: minPrice,
     price_max: maxPrice,
@@ -81,7 +83,7 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     harvest_date: '',
     is_featured: false,
     is_active: apiProduct.is_active,
-    category_id: apiProduct.categories?.[0]?.id || '',
+    category_id: apiProduct.categories?.[0]?.id || "",
     created_at: apiProduct.created_at,
     updated_at: apiProduct.updated_at,
     variants: activeVariants.map(variant => ({

@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { SEO } from "@/components/SEO";
-import { NotFoundContent } from "@/components/shared/NotFoundContent";
+import { SEO } from "@/shared/SEO";
+import { NotFoundContent } from "@/shared/NotFoundContent";
 
 const NotFound = () => {
   const location = useLocation();

@@ -1,6 +1,6 @@
-import { ContactHero } from '@/components/contact/ContactHero';
-import { ContactForm } from '@/components/contact/ContactForm';
-import { ContactInfo } from '@/components/contact/ContactInfo';
+import { ContactHero } from "@/features/contact/ContactHero";
+import { ContactForm } from "@/features/contact/ContactForm";
+import { ContactInfo } from "@/features/contact/ContactInfo";
 
 export default function Contact() {
   return (

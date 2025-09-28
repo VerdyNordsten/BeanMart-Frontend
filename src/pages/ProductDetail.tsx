@@ -1,20 +1,21 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { SEO, generateProductStructuredData, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { productsApi, categoriesApi, roastLevelsApi } from '@/lib/api';
-import { Product, ProductVariant } from '@/types/product';
-import { useQuery } from '@tanstack/react-query';
-import { useCartStore } from '@/lib/cart';
-import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
-import { ProductBreadcrumb } from '@/components/product-detail/ProductBreadcrumb';
-import { ProductImages } from '@/components/product-detail/ProductImages';
-import { ProductInfo } from '@/components/product-detail/ProductInfo';
-import { ProductActions } from '@/components/product-detail/ProductActions';
-import { ProductDetails } from '@/components/product-detail/ProductDetails';
-import { ShippingInfo } from '@/components/product-detail/ShippingInfo';
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { SEO } from "@/shared/SEO";
+import { generateProductStructuredData, generateBreadcrumbStructuredData } from "@/shared/seo-utils";
+import { Button } from "@/ui/button";
+import { Skeleton } from "@/ui/skeleton";
+import { productsApi, categoriesApi, roastLevelsApi } from "@/lib/api";
+import { Product, ProductVariant } from "@/types/product";
+import { useQuery } from "@tanstack/react-query";
+import { useCartStore } from "@/lib/cart";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { ProductBreadcrumb } from "@/features/product-detail/ProductBreadcrumb";
+import { ProductImages } from "@/features/product-detail/ProductImages";
+import { ProductInfo } from "@/features/product-detail/ProductInfo";
+import { ProductActions } from "@/features/product-detail/ProductActions";
+import { ProductDetails } from "@/features/product-detail/ProductDetails";
+import { ShippingInfo } from "@/features/product-detail/ShippingInfo";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -40,13 +41,7 @@ export default function ProductDetail() {
   const categories = categoriesResponse?.data || [];
   const roastLevels = roastLevelsResponse?.data || [];
 
-  useEffect(() => {
-    if (slug) {
-      loadProduct();
-    }
-  }, [slug]);
-
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     if (!slug) return;
     
     setLoading(true);
@@ -63,9 +58,9 @@ export default function ProductDetail() {
           id: productData.id,
           slug: productData.slug,
           name: productData.name,
-          short_description: productData.short_description || '',
-          long_description: productData.long_description || '',
-          currency: productData.currency || 'USD',
+          short_description: productData.short_description || "",
+          long_description: productData.long_description || "",
+          currency: productData.currency || "USD",
           is_active: productData.is_active !== false,
           created_at: productData.created_at,
           updated_at: productData.updated_at,
@@ -119,7 +114,13 @@ export default function ProductDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    if (slug) {
+      loadProduct();
+    }
+  }, [slug, loadProduct]);
 
   const handleVariantChange = (variantId: string) => {
     if (product?.variants) {
@@ -197,7 +198,7 @@ export default function ProductDetail() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-6">{error || 'The product you are looking for does not exist.'}</p>
+          <p className="text-gray-600 mb-6">{error || "The product you are looking for does not exist."}</p>
           <Button onClick={() => navigate('/products')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Products
@@ -229,7 +230,7 @@ export default function ProductDetail() {
     <div className="container mx-auto px-4 py-8">
       <SEO
         title={`${product.name} - Premium Coffee`}
-        description={product.short_description || `${product.name} - Premium coffee beans available at Beanmart. ${product.long_description?.substring(0, 150) || ''}`}
+        description={product.short_description || `${product.name} - Premium coffee beans available at Beanmart. ${product.long_description?.substring(0, 150) || ""}`}
         keywords={`${product.name}, coffee beans, ${product.categories?.map(c => c.name).join(', ')}, ${product.roastLevels?.map(r => r.name).join(', ')}, premium coffee`}
         url={`/product/${product.slug}`}
         type="product"

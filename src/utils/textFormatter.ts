@@ -14,7 +14,7 @@
  */
 export function formatDescription(text: string): string {
   if (!text || typeof text !== 'string') {
-    return '';
+    return "";
   }
 
   let formatted = text;

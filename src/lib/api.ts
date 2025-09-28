@@ -1,4 +1,4 @@
-import { apiClient, uploadApiClient } from './api-client';
+import { apiClient, uploadApiClient } from "./api-client";
 
 // ===== AUTH API =====
 export const authApi = {

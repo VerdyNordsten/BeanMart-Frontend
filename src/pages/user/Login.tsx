@@ -5,8 +5,8 @@ import { useAuthStore } from "@/lib/auth";
 import { authApi } from "@/lib/api";
 import { formatAPIError } from "@/lib/api-client";
 import { ArrowRight } from "lucide-react";
-import { AuthCard } from "@/components/auth/AuthCard";
-import { LoginForm, type LoginFormData } from "@/components/auth/LoginForm";
+import { AuthCard } from "@/features/auth/AuthCard";
+import { LoginForm, type LoginFormData } from "@/features/auth/LoginForm";
 
 export default function UserLogin() {
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +56,7 @@ export default function UserLogin() {
       let userType = 'user';
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        userType = payload.type || 'user';
+        userType = payload.type || "user";
       } catch (e) {
         console.error('Error decoding token:', e);
       }

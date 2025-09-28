@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/lib/auth';
-import { productsApi, productVariantsApi } from '@/lib/api';
-import { SimpleProductEditModal } from '@/components/admin/SimpleProductEditModal';
-import { SimpleProductAddModal } from '@/components/admin/SimpleProductAddModal';
-import type { Product } from '@/types/product';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
+import { Badge } from "@/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/lib/auth";
+import { productsApi, productVariantsApi } from "@/lib/api";
+import { SimpleProductEditModal } from "@/features/admin/SimpleProductEditModal";
+import { SimpleProductAddModal } from "@/features/admin/SimpleProductAddModal";
+import type { Product } from "@/types/product";
 
 export default function AdminProducts() {
   const { toast } = useToast();
@@ -162,7 +162,7 @@ export default function AdminProducts() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                {product.short_description || 'No description available'}
+                {product.short_description || "No description available"}
               </p>
               
               {/* Product Variants */}

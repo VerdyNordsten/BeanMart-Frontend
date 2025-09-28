@@ -1,10 +1,9 @@
-import axios, { AxiosResponse, AxiosError } from 'axios';
-import { useAuthStore } from './auth';
-import { debug, logApi, logResponse, logError } from '@/utils/debug';
+import axios, { AxiosResponse, AxiosError } from "axios";
+import { useAuthStore } from "./auth";
 
 // Create axios instance
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
   timeout: 10000, // Keep default timeout low for normal requests
   headers: {
     'Content-Type': 'application/json',
@@ -13,7 +12,7 @@ export const apiClient = axios.create({
 
 // Create special instance for file uploads with longer timeout
 export const uploadApiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
   timeout: 120000, // 2 minutes timeout for upload operations
   headers: {
     'Content-Type': 'application/json',
@@ -105,7 +104,7 @@ export const formatAPIError = (error: unknown): APIError => {
     if (axiosError.response?.data && typeof axiosError.response.data === 'object') {
       const data = axiosError.response.data as { message?: string; details?: Record<string, string[]> };
       return {
-        message: data.message || 'An error occurred',
+        message: data.message || "An error occurred",
         details: data.details || {},
         status: axiosError.response.status,
       };
@@ -114,7 +113,7 @@ export const formatAPIError = (error: unknown): APIError => {
   
   if (error && typeof error === 'object' && 'message' in error) {
     return {
-      message: (error as Error).message || 'Network error',
+      message: (error as Error).message || "Network error",
       status: 0,
     };
   }

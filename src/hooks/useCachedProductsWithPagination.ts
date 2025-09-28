@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { productsApi } from '@/lib/api';
-import { Product } from '@/types/product';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { productsApi } from "@/lib/api";
+import { Product } from "@/types/product";
 
 interface CachedData<T> {
   data: T;
@@ -41,7 +41,7 @@ export function useCachedProductsWithPagination(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const filters = { search, roast, category, weight };
+  const filters = useMemo(() => ({ search, roast, category, weight }), [search, roast, category, weight]);
   const cacheKey = `products_page_${page}_limit_${limit}_${JSON.stringify(filters)}`;
   
 
@@ -138,7 +138,7 @@ export function useCachedProductsWithPagination(
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, roast, category, weight, cacheKey]);
+  }, [page, limit, search, roast, category, weight, cacheKey, filters]);
 
   useEffect(() => {
     loadProducts();
@@ -152,12 +152,42 @@ export function useCachedProductsWithPagination(
   };
 }
 
-function transformApiProducts(apiProducts: any[]): Product[] {
-  return apiProducts
-    .filter((apiProduct: any) => apiProduct.is_active !== false)
-    .map((apiProduct: any) => {
+interface ApiProduct {
+  id: string;
+  slug: string;
+  name: string;
+  short_description?: string;
+  long_description?: string;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  variants?: Array<{
+    id: string;
+    price: number | string;
+    compare_at_price?: number | string;
+    stock: number | string;
+    weight_gram?: number | string;
+    is_active: boolean;
+  }>;
+  categories?: Array<{
+    category_id: string;
+    category_slug: string;
+    category_name: string;
+  }>;
+  roastLevels?: Array<{
+    roast_level_id: string;
+    roast_level_slug: string;
+    roast_level_name: string;
+  }>;
+}
+
+function transformApiProducts(apiProducts: unknown[]): Product[] {
+  return (apiProducts as ApiProduct[])
+    .filter(apiProduct => apiProduct.is_active !== false)
+    .map(apiProduct => {
       // Calculate price range from variants
-      const activeVariants = apiProduct.variants?.filter((v: any) => v.is_active).map((v: any) => ({
+      const activeVariants = apiProduct.variants?.filter(v => v.is_active).map(v => ({
         ...v,
         price: Number(v.price),
         compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : undefined,
@@ -165,15 +195,15 @@ function transformApiProducts(apiProducts: any[]): Product[] {
         weight_gram: v.weight_gram ? Number(v.weight_gram) : undefined
       })) || [];
       
-      const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map((v: any) => v.price)) : 0;
-      const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map((v: any) => v.price)) : 0;
+      const minPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map(v => v.price)) : 0;
+      const maxPrice = activeVariants.length > 0 ? Math.max(...activeVariants.map(v => v.price)) : 0;
       
       return {
         id: apiProduct.id,
         slug: apiProduct.slug,
         name: apiProduct.name,
-        short_description: apiProduct.short_description || '',
-        long_description: apiProduct.long_description || '',
+        short_description: apiProduct.short_description || "",
+        long_description: apiProduct.long_description || "",
         currency: apiProduct.currency,
         price_min: minPrice,
         price_max: maxPrice,
@@ -186,17 +216,17 @@ function transformApiProducts(apiProducts: any[]): Product[] {
         harvest_date: '',
         is_featured: false,
         is_active: apiProduct.is_active !== false,
-        category_id: apiProduct.categories?.[0]?.category_id || '',
+        category_id: apiProduct.categories?.[0]?.category_id || "",
         created_at: apiProduct.created_at,
         updated_at: apiProduct.updated_at,
         variants: activeVariants,
         images: [],
-        categories: apiProduct.categories?.map((cat: any) => ({
+        categories: apiProduct.categories?.map(cat => ({
           id: cat.category_id,
           slug: cat.category_slug,
           name: cat.category_name
         })) || [],
-        roastLevels: apiProduct.roastLevels?.map((rl: any) => ({
+        roastLevels: apiProduct.roastLevels?.map(rl => ({
           id: rl.roast_level_id,
           slug: rl.roast_level_slug,
           name: rl.roast_level_name
@@ -214,7 +244,7 @@ function getCachedData(key: string): CachedData<PaginationData> | null {
   }
 }
 
-function setCachedData(key: string, data: PaginationData, filters: any): void {
+function setCachedData(key: string, data: PaginationData, filters: { search: string; roast: string; category: string; weight: string }): void {
   try {
     const cacheData: CachedData<PaginationData> = {
       data,
@@ -245,5 +275,5 @@ export function clearProductsPaginationCache(): void {
 
 // Make it available globally for debugging
 if (typeof window !== 'undefined') {
-  (window as any).clearProductsPaginationCache = clearProductsPaginationCache;
+  (window as Window & { clearProductsPaginationCache?: () => void }).clearProductsPaginationCache = clearProductsPaginationCache;
 }

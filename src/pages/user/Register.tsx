@@ -4,8 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/auth";
 import { authApi } from "@/lib/api";
 import { formatAPIError } from "@/lib/api-client";
-import { AuthCard } from "@/components/auth/AuthCard";
-import { RegisterForm, type RegisterFormData } from "@/components/auth/RegisterForm";
+import { AuthCard } from "@/features/auth/AuthCard"
+import { RegisterForm, type RegisterFormData } from "@/features/auth/RegisterForm";
 
 export default function UserRegister() {
   const [isLoading, setIsLoading] = useState(false);

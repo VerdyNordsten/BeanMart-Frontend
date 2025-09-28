@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
+import { Button } from "@/ui/button";
+import { Separator } from "@/ui/separator";
+import { Badge } from "@/ui/badge";
 import { Plus, CreditCard, Edit, Trash2, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

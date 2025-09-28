@@ -1,9 +1,9 @@
-import { StoryHero } from '@/components/story/StoryHero';
-import { MissionStatement } from '@/components/story/MissionStatement';
-import { ValuesSection } from '@/components/story/ValuesSection';
-import { TimelineSection } from '@/components/story/TimelineSection';
-import { ImpactStats } from '@/components/story/ImpactStats';
-import { CallToAction } from '@/components/story/CallToAction';
+import { StoryHero } from "@/features/story/StoryHero";
+import { MissionStatement } from "@/features/story/MissionStatement";
+import { ValuesSection } from "@/features/story/ValuesSection";
+import { TimelineSection } from "@/features/story/TimelineSection";
+import { ImpactStats } from "@/features/story/ImpactStats";
+import { CallToAction } from "@/features/story/CallToAction";
 
 export default function Story() {
   return (

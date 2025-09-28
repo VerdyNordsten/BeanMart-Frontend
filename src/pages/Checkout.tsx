@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCartStore } from '@/lib/cart';
-import { useAuthStore } from '@/lib/auth';
-import { ordersApi, userAddressesApi } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { CheckoutHeader } from '@/components/checkout/CheckoutHeader';
-import { ShippingAddressForm } from '@/components/checkout/ShippingAddressForm';
-import { PaymentMethodForm } from '@/components/checkout/PaymentMethodForm';
-import { OrderNotesForm } from '@/components/checkout/OrderNotesForm';
-import { OrderSummary } from '@/components/checkout/OrderSummary';
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCartStore } from "@/lib/cart";
+import { useAuthStore } from "@/lib/auth";
+import { ordersApi, userAddressesApi } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { CheckoutHeader } from "@/features/checkout/CheckoutHeader";
+import { ShippingAddressForm } from "@/features/checkout/ShippingAddressForm";
+import { PaymentMethodForm } from "@/features/checkout/PaymentMethodForm";
+import { OrderNotesForm } from "@/features/checkout/OrderNotesForm";
+import { OrderSummary } from "@/features/checkout/OrderSummary";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ export default function Checkout() {
     retry: 1
   });
 
-  const addresses = addressesResponse?.data || [];
+  const addresses = useMemo(() => addressesResponse?.data || [], [addressesResponse?.data]);
   const hasAddresses = addresses.length > 0;
 
   // Redirect if not authenticated
@@ -63,20 +63,20 @@ export default function Checkout() {
       if (defaultAddress) {
         setSelectedAddressId(defaultAddress.id);
         setShippingAddress({
-          fullName: defaultAddress.recipient_name || '',
-          phone: defaultAddress.phone || '',
+          fullName: defaultAddress.recipient_name || "",
+          phone: defaultAddress.phone || "",
           address: `${defaultAddress.address_line1}${defaultAddress.address_line2 ? ', ' + defaultAddress.address_line2 : ''}`,
-          city: defaultAddress.city || '',
-          state: defaultAddress.state || '',
-          postalCode: defaultAddress.postal_code || '',
-          country: defaultAddress.country || 'Indonesia'
+          city: defaultAddress.city || "",
+          state: defaultAddress.state || "",
+          postalCode: defaultAddress.postal_code || "",
+          country: defaultAddress.country || "Indonesia"
         });
       }
     } else if (user && !useExistingAddress) {
       setShippingAddress(prev => ({
         ...prev,
-        fullName: user.full_name || '',
-        phone: user.phone || ''
+        fullName: user.full_name || "",
+        phone: user.phone || ""
       }));
     }
   }, [hasAddresses, useExistingAddress, addresses, user]);
@@ -87,13 +87,13 @@ export default function Checkout() {
     if (selectedAddress) {
       setSelectedAddressId(addressId);
       setShippingAddress({
-        fullName: selectedAddress.recipient_name || '',
-        phone: selectedAddress.phone || '',
+        fullName: selectedAddress.recipient_name || "",
+        phone: selectedAddress.phone || "",
         address: `${selectedAddress.address_line1}${selectedAddress.address_line2 ? ', ' + selectedAddress.address_line2 : ''}`,
-        city: selectedAddress.city || '',
-        state: selectedAddress.state || '',
-        postalCode: selectedAddress.postal_code || '',
-        country: selectedAddress.country || 'Indonesia'
+        city: selectedAddress.city || "",
+        state: selectedAddress.state || "",
+        postalCode: selectedAddress.postal_code || "",
+        country: selectedAddress.country || "Indonesia"
       });
     }
   };
@@ -159,7 +159,7 @@ export default function Checkout() {
         clearCart();
         navigate('/user/orders');
       } else {
-        throw new Error(response.message || 'Failed to create order');
+        throw new Error(response.message || "Failed to create order");
       }
       
     } catch (error) {

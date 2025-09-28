@@ -3,16 +3,16 @@ import { ordersApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Order } from "@/types/product";
-import { OrdersHeader } from '@/components/user/orders/OrdersHeader';
-import { OrdersList } from '@/components/user/orders/OrdersList';
-import { OrderDetailsSheet } from '@/components/user/orders/OrderDetailsSheet';
+import { OrdersHeader } from "@/features/user/orders/OrdersHeader";
+import { OrdersList } from "@/features/user/orders/OrdersList";
+import { OrderDetailsSheet } from "@/features/user/orders/OrderDetailsSheet";
 
 
 export default function UserOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   const { user, token } = useAuthStore();
   const { toast } = useToast();

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Product, ProductVariant } from '@/types/product';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { Product, ProductVariant } from "@/types/product";
 
 export interface CartItem {
   id: string;

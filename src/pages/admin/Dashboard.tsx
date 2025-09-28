@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ordersApi } from '@/lib/api';
-import { AdminDashboardHeader } from '@/components/admin/dashboard/AdminDashboardHeader';
-import { AdminKPICards } from '@/components/admin/dashboard/AdminKPICards';
-import { OrderStatusOverview } from '@/components/admin/dashboard/OrderStatusOverview';
-import { QuickActions } from '@/components/admin/dashboard/QuickActions';
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ordersApi } from "@/lib/api";
+import { AdminDashboardHeader } from "@/features/admin/dashboard/AdminDashboardHeader";
+import { AdminKPICards } from "@/features/admin/dashboard/AdminKPICards";
+import { OrderStatusOverview } from "@/features/admin/dashboard/OrderStatusOverview";
+import { QuickActions } from "@/features/admin/dashboard/QuickActions";
 
 
 export default function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [dateRange, setDateRange] = useState(searchParams.get('range') || '30');
+  const [dateRange, setDateRange] = useState(searchParams.get('range') || "30");
 
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['admin-orders', dateRange],

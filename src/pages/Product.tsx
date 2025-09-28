@@ -1,21 +1,22 @@
-import { useSearchParams } from 'react-router-dom';
-import { SEO, generateBreadcrumbStructuredData } from '@/components/SEO';
-import { categoriesApi, roastLevelsApi } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
-import { useCachedProductsWithPagination } from '@/hooks/useCachedProductsWithPagination';
-import { ProductPageHeader } from '@/components/products/ProductPageHeader';
-import { ProductFilters } from '@/components/products/ProductFilters';
-import { ProductResults } from '@/components/products/ProductResults';
+import { useSearchParams } from "react-router-dom";
+import { SEO } from "@/shared/SEO";
+import { generateBreadcrumbStructuredData } from "@/shared/seo-utils";
+import { categoriesApi, roastLevelsApi } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { useCachedProductsWithPagination } from "@/hooks/useCachedProductsWithPagination";
+import { ProductPageHeader } from "@/features/products/ProductPageHeader";
+import { ProductFilters } from "@/features/products/ProductFilters";
+import { ProductResults } from "@/features/products/ProductResults";
 
 export default function ProductPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Get current page from URL params
-  const currentPage = parseInt(searchParams.get('page') || '1', 10);
-  const searchQuery = searchParams.get('search') || '';
-  const roastFilterSlug = searchParams.get('roast') || '';
-  const categoryFilterSlug = searchParams.get('category') || '';
-  const weightFilter = searchParams.get('weight') || '';
+  const currentPage = parseInt(searchParams.get('page') || "1", 10);
+  const searchQuery = searchParams.get('search') || "";
+  const roastFilterSlug = searchParams.get('roast') || "";
+  const categoryFilterSlug = searchParams.get('category') || "";
+  const weightFilter = searchParams.get('weight') || "";
   const itemsPerPage = 12;
 
   // Fetch categories and roast levels with caching
@@ -33,12 +34,12 @@ export default function ProductPage() {
     gcTime: 2 * 60 * 60 * 1000, // 2 hours
   });
 
-  const categories = (categoriesResponse as any)?.data || [];
-  const roastLevels = (roastLevelsResponse as any)?.data || [];
+  const categories = categoriesResponse?.data || [];
+  const roastLevels = roastLevelsResponse?.data || [];
 
   // Convert slugs to IDs for filtering
-  const roastFilter = roastLevels.find((rl: any) => rl.slug === roastFilterSlug)?.id || '';
-  const categoryFilter = categories.find((cat: any) => cat.slug === categoryFilterSlug)?.id || '';
+  const roastFilter = roastLevels.find((rl) => rl.slug === roastFilterSlug)?.id || "";
+  const categoryFilter = categories.find((cat) => cat.slug === categoryFilterSlug)?.id || "";
 
   // Use cached products with pagination
   const { data: productsData, loading, error, refetch } = useCachedProductsWithPagination(
